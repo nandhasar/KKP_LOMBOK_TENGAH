@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penghitungan Pajak Pemeriksaan - Bapenda Lombok Tengah</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+.signature-wrap{
+    margin-top:20px;
+    border:1px solid #e5e5e5;
+    border-radius:12px;
+    padding:16px;
+    background:#fafafa;
+}
+.signature-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+}
+.signature-card{
+    background:#fff;
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:14px;
+    text-align:center;
+}
+.signature-title{
+    font-weight:700;
+    color:#1e3c72;
+    margin-bottom:8px;
+}
+.signature-place{
+    font-size:13px;
+    color:#555;
+    margin-bottom:8px;
+}
+.signature-space{
+    height:70px;
+}
+.signature-name{
+    font-weight:700;
+    text-decoration:underline;
+}
+.signature-sub{
+    font-size:12px;
+    color:#666;
+}
+@media(max-width:768px){
+    .signature-grid{grid-template-columns:1fr}
+}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:20px}
+        .container{max-width:1500px;margin:0 auto;background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
+        .header{background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);color:#fff;padding:30px;text-align:center}
+        .header h1{font-size:28px;margin-bottom:10px}
+        .header p{opacity:.9;font-size:14px}
+        .section{padding:25px;border-bottom:1px solid #eee}
+        .section-title{font-size:18px;font-weight:700;color:#1e3c72;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+        .section-title::before{content:'';width:4px;height:24px;background:linear-gradient(135deg,#1e3c72,#2a5298);border-radius:2px}
+        .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+        .form-group{display:flex;flex-direction:column}
+        .form-group label{font-weight:600;color:#333;margin-bottom:8px;font-size:14px}
+        .form-group input,.form-group select{padding:12px 15px;border:2px solid #e0e0e0;border-radius:10px;font-size:14px;transition:.3s}
+        .form-group input:focus,.form-group select:focus{outline:none;border-color:#2a5298;box-shadow:0 0 0 3px rgba(42,82,152,.1)}
+        .radio-group{display:flex;flex-wrap:wrap;gap:15px}
+        .radio-item{display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 15px;border:2px solid #e0e0e0;border-radius:10px;transition:.3s;flex:1;min-width:200px}
+        .radio-item:hover{border-color:#2a5298}
+        .radio-item input[type="radio"]{width:18px;height:18px;cursor:pointer}
+        .radio-item.selected{border-color:#2a5298;background:rgba(42,82,152,.05)}
+        .table-container{overflow-x:auto;margin-top:15px}
+        table{width:100%;border-collapse:collapse;font-size:12px}
+        th,td{padding:10px 8px;text-align:center;border:1px solid #ddd}
+        th{background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;font-weight:600;white-space:nowrap}
+        tr:nth-child(even){background:#f8f9fa}
+        tr:hover{background:rgba(42,82,152,.05)}
+        td input.currency-input{
+            width:140px;padding:8px 10px;border:1px solid #ddd;border-radius:5px;
+            text-align:right;font-size:12px;font-family:'Consolas','Courier New',monospace;
+        }
+        td input[type="date"]{width:135px;padding:6px 4px;border:1px solid #ddd;border-radius:5px;font-size:11px;text-align:center}
+        td select{padding:4px;border:1px solid #ddd;border-radius:5px;font-size:11px;width:100%}
+        td input:focus,td select:focus{outline:none;border-color:#2a5298;box-shadow:0 0 0 2px rgba(42,82,152,.15)}
+        .highlight-row{background:#fff3cd!important}
+        .highlight-row td{font-weight:700}
+        .totals-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;margin-top:20px}
+        .total-item{background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.05);border:1px solid #eee}
+        .total-item h4{color:#666;font-size:11px;margin-bottom:8px;text-transform:uppercase}
+        .total-item .amount{font-size:20px;font-weight:700;color:#1e3c72}
+        .total-item.denda .amount{color:#dc3545}
+        .total-item.total-bayar{border:2px solid #28a745;grid-column:1/-1}
+        .total-item.total-bayar .amount{color:#28a745;font-size:24px}
+        .terbilang-box{background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;padding:20px;border-radius:10px;margin-top:20px;text-align:center}
+        .terbilang-box h4{font-size:14px;opacity:.8;margin-bottom:10px}
+        .terbilang-box p{font-size:18px;font-weight:700}
+        .btn-container{display:flex;gap:15px;margin-top:25px;justify-content:center;flex-wrap:wrap}
+        .btn{padding:15px 40px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;transition:.3s;display:flex;align-items:center;gap:10px}
+        .btn-primary{background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 5px 20px rgba(42,82,152,.4)}
+        .btn-success{background:linear-gradient(135deg,#11998e,#38ef7d);color:#fff}
+        .btn-success:hover{transform:translateY(-2px);box-shadow:0 5px 20px rgba(56,239,125,.4)}
+        .btn-danger{background:linear-gradient(135deg,#eb3349,#f45c43);color:#fff}
+        .btn-danger:hover{transform:translateY(-2px);box-shadow:0 5px 20px rgba(235,51,73,.4)}
+        .btn-excel{background:linear-gradient(135deg,#217346,#2b9348);color:#fff}
+        .btn-excel:hover{transform:translateY(-2px);box-shadow:0 5px 20px rgba(43,147,72,.4)}
+        .btn-pdf{background:linear-gradient(135deg,#c41e3a,#dc3545);color:#fff}
+        .btn-pdf:hover{transform:translateY(-2px);box-shadow:0 5px 20px rgba(220,53,69,.4)}
+        .info-box{background:#e7f3ff;border-left:4px solid #2196f3;padding:15px 20px;border-radius:0 10px 10px 0;margin-top:15px;font-size:13px}
+        .info-box.warning{background:#fff3cd;border-left-color:#ffc107}
+        .status-tepat{color:#28a745;font-weight:700}
+        .status-telat{color:#dc3545;font-weight:700}
+        .lapor-ya{color:#28a745;font-weight:600}
+        .lapor-tidak{color:#dc3545;font-weight:600}
+        .output-cell{font-family:'Consolas','Courier New',monospace;text-align:right!important;white-space:nowrap}
+        @media print{body{background:#fff;padding:0}.container{box-shadow:none}.btn-container,.no-print{display:none!important}}
+        @media(max-width:768px){.header h1{font-size:20px}.section{padding:15px}table{font-size:10px}th,td{padding:5px 3px}.form-grid{grid-template-columns:1fr}.btn{padding:12px 20px;font-size:14px}}
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <h1>🧮 PENGHITUNGAN PAJAK PEMERIKSAAN</h1>
+        <p>SKPDKB / SKPDKBT — Perhitungan Kekurangan Pembayaran Pajak Hasil Pemeriksaan</p>
+    </div>
+
+    <!-- DATA WP (dari localStorage) -->
+    <div class="section">
+        <div class="section-title">📋 DATA WAJIB PAJAK</div>
+        <div class="form-grid">
+            <div class="form-group"><label>Nama Wajib Pajak</label><input type="text" id="namaWp" readonly></div>
+            <div class="form-group"><label>NPWPD</label><input type="text" id="npwpd" readonly></div>
+            <div class="form-group"><label>Alamat</label><input type="text" id="alamatWp" readonly></div>
+            <div class="form-group"><label>Jenis Pajak</label><input type="text" id="jenisPajakDisp" readonly></div>
+        </div>
+    </div>
+
+    <!-- MASA PAJAK & PENETAPAN -->
+    <div class="section">
+        <div class="section-title">📅 DATA MASA PAJAK & PENETAPAN</div>
+        <div class="form-grid">
+            <div class="form-group"><label>Masa Pajak (Dari)</label><input type="month" id="masaPajakDari" value="2025-01" onchange="generateTable()"></div>
+            <div class="form-group"><label>Masa Pajak (Sampai)</label><input type="month" id="masaPajakSampai" value="2025-12" onchange="generateTable()"></div>
+            <div class="form-group"><label>Tanggal Pemeriksaan / SKPDKB</label><input type="date" id="tanggalPemeriksaan" value="2026-04-08" onchange="calculate()"></div>
+            <div class="form-group"><label>Tanggal Jatuh Tempo (tiap bulan)</label><input type="number" id="tanggalJatuhTempo" value="15" min="1" max="31" onchange="generateTable()"></div>
+        </div>
+    </div>
+
+    <!-- JENIS PENETAPAN -->
+    <div class="section">
+        <div class="section-title">📄 JENIS PENETAPAN</div>
+        <div class="radio-group">
+            <label class="radio-item selected" id="radio1" onclick="selectRadio(1)">
+                <input type="radio" name="jenisPenetapan" value="skpdkb-pemeriksaan" checked>
+                <span>SKPDKB - Hasil Pemeriksaan (WP Kooperatif)</span>
+            </label>
+            <label class="radio-item" id="radio2" onclick="selectRadio(2)">
+                <input type="radio" name="jenisPenetapan" value="skpdkb-jabatan">
+                <span>SKPDKB - Penetapan Jabatan (Tidak Kooperatif)</span>
+            </label>
+            <label class="radio-item" id="radio3" onclick="selectRadio(3)">
+                <input type="radio" name="jenisPenetapan" value="skpdkbt">
+                <span>SKPDKBT - Data Baru</span>
+            </label>
+        </div>
+    </div>
+
+    <!-- KONDISI WP -->
+    <div class="section">
+        <div class="section-title">👤 KONDISI WAJIB PAJAK</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Status WP</label>
+                <select id="statusWp" onchange="calculate()">
+                    <option value="kooperatif" selected>WP Kooperatif (Bunga 1,8%)</option>
+                    <option value="tidak-kooperatif">WP Tidak Kooperatif (Bunga 2,2%)</option>
+                </select>
+            </div>
+        </div>
+        <div class="info-box">
+            <strong>ℹ️ Info:</strong><br>
+            • WP Kooperatif = Bunga <b>1,8%</b>/bulan, Kenaikan 0%<br>
+            • WP Tidak Kooperatif = Bunga <b>2,2%</b>/bulan, Kenaikan 25%/50%/100%<br>
+            • <b>Denda Administrasi Rp 25.000 per masa pajak</b> yang tidak menyampaikan laporan omzet<br>
+            • Status lapor omzet bisa dipilih <b>per bulan</b> di tabel
+        </div>
+    </div>
+
+    <!-- TABEL INPUT -->
+    <div class="section">
+        <div class="section-title">📊 INPUT DATA PER MASA PAJAK</div>
+        <div class="info-box warning">
+            <strong>⚠️ Perhatian:</strong><br>
+            • Masukkan Omzet <b>SUDAH TERMASUK PAJAK (Bruto)</b>. DPP = Omzet ÷ (1 + Tarif).<br>
+            • <b>Tanggal Setor</b> = tanggal WP membayar pajak (format: YYYY-MM-DD).<br>
+            • <b>Lapor Omzet</b> = apakah WP menyampaikan laporan bulan ini? (Tidak = denda Rp 25.000).<br>
+            • Angka otomatis terformat dengan titik pemisah ribuan.
+        </div>
+        <div class="table-container">
+<div class="signature-wrap">
+    <div class="section-title" style="margin-bottom:12px">✍️ TANDA TANGAN</div>
+    <div class="signature-grid">
+        <div class="signature-card">
+            <div class="signature-title">Wajib Pajak / Perwakilan</div>
+            <div class="signature-place" id="ttdWpTempat">Praya, -</div>
+            <div class="signature-sub">Yang memberi keterangan,</div>
+            <div class="signature-space"></div>
+            <div class="signature-name" id="ttdWpNama">-</div>
+            <div class="signature-sub" id="ttdWpJabatan">-</div>
+        </div>
+
+        <div class="signature-card">
+            <div class="signature-title">Petugas Pemeriksa</div>
+            <div class="signature-place" id="ttdPetugasTempat">Praya, -</div>
+            <div class="signature-sub" id="ttdPetugasJabatan">Pemeriksa,</div>
+            <div class="signature-space"></div>
+            <div class="signature-name" id="ttdPetugasNama">-</div>
+            <div class="signature-sub" id="ttdPetugasNip">NIP. -</div>
+        </div>
+    </div>
+</div>
+            <table id="tabelPerhitungan">
+                <thead>
+                    <tr>
+                        <th rowspan="2">No</th>
+                        <th rowspan="2">Masa Pajak</th>
+                        <th colspan="4" style="background:#c0392b">📥 INPUT USER</th>
+                        <th colspan="5" style="background:#27ae60">📤 PERHITUNGAN OTOMATIS</th>
+                        <th colspan="4" style="background:#d35400">📊 SANKSI & TOTAL</th>
+                    </tr>
+                    <tr>
+                        <th style="background:#e74c3c">Omzet WP<br>(Bruto)</th>
+                        <th style="background:#e74c3c">Omzet<br>Pemeriksaan</th>
+                        <th style="background:#e74c3c">Tanggal<br>Setor</th>
+                        <th style="background:#e74c3c">Lapor<br>Omzet?</th>
+                        <th style="background:#2ecc71">Pajak<br>Terutang</th>
+                        <th style="background:#2ecc71">Pajak<br>Dibayar</th>
+                        <th style="background:#2ecc71">Selisih</th>
+                        <th style="background:#2ecc71">Jatuh<br>Tempo</th>
+                        <th style="background:#2ecc71">Bulan<br>Terlambat</th>
+                        <th style="background:#e67e22">Denda<br>Bunga</th>
+                        <th style="background:#e67e22">Kenaikan</th>
+                        <th style="background:#e67e22">Denda<br>Adm</th>
+                        <th style="background:#e67e22">Total KB</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- RINGKASAN -->
+    <div class="section">
+        <div class="section-title">💰 RINGKASAN PERHITUNGAN</div>
+        <div class="totals-grid">
+            <div class="total-item"><h4>Total Pokok Pajak Terutang</h4><div class="amount" id="totalPajakTerutang">Rp 0</div></div>
+            <div class="total-item"><h4>Total Kredit Pajak (Dibayar)</h4><div class="amount" id="totalKreditPajak">Rp 0</div></div>
+            <div class="total-item"><h4>Total Kekurangan Pokok Pajak</h4><div class="amount" id="totalKekuranganPajak">Rp 0</div></div>
+            <div class="total-item denda"><h4>Total Denda Bunga</h4><div class="amount" id="totalDenda">Rp 0</div></div>
+            <div class="total-item"><h4>Total Kenaikan</h4><div class="amount" id="totalKenaikan">Rp 0</div></div>
+            <div class="total-item denda"><h4>Total Denda Administrasi</h4><div class="amount" id="totalDendaAdmin">Rp 0</div><div style="font-size:11px;color:#666;margin-top:5px" id="dendaAdmDetail">0 masa × Rp 25.000</div></div>
+        </div>
+        <div class="totals-grid" style="margin-top:20px">
+            <div class="total-item total-bayar">
+                <h4>🏆 TOTAL YANG HARUS DIBAYARKAN</h4>
+                <div class="amount" id="totalBayar">Rp 0</div>
+            </div>
+        </div>
+        <div class="terbilang-box">
+            <h4>TERBILANG:</h4>
+            <p id="terbilang">-</p>
+        </div>
+    </div>
+
+    <!-- BUTTONS -->
+    <div class="section">
+        <div class="btn-container no-print">
+            <button class="btn btn-primary" onclick="calculate()">🧮 HITUNG</button>
+            <button class="btn btn-pdf" onclick="downloadPDF()">📥 DOWNLOAD PDF</button>
+            <button class="btn btn-excel" onclick="downloadExcel()">📊 DOWNLOAD EXCEL</button>
+            <button class="btn btn-success" onclick="window.print()">🖨️ CETAK</button>
+            <button class="btn btn-danger" onclick="resetForm()">🔄 RESET</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateSignatureBlock() {
+    const wp = kkpData.wp || {};
+    const petugas = getKKPPetugasList()[0] || {};
+    const tgl = document.getElementById('tanggalPemeriksaan')?.value || '';
+    const tglText = tgl ? tgl : '-';
+
+    document.getElementById('ttdWpTempat').textContent = 'Praya, ' + tglText;
+    document.getElementById('ttdWpNama').textContent = wp.namaKeterangan || wp.namaPerusahaan || '-';
+    document.getElementById('ttdWpJabatan').textContent = wp.jabatanKeterangan || 'Perwakilan Wajib Pajak';
+
+    document.getElementById('ttdPetugasTempat').textContent = 'Praya, ' + tglText;
+    document.getElementById('ttdPetugasJabatan').textContent = (petugas.jabatan || 'Pemeriksa') + ',';
+    document.getElementById('ttdPetugasNama').textContent = petugas.nama || '-';
+    document.getElementById('ttdPetugasNip').textContent = 'NIP. ' + (petugas.nip || '-');
+}
+// ==========================================
+//              CONFIGURATION
+// ==========================================
+const NAMA_BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+// ⬇️ PASTE LOGO BASE64 ANDA DI SINI ⬇️
+const LOGO_BASE64 = 'data:image/png;base64,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';
+// ⬆️ GANTI ... DENGAN BASE64 LOGO ANDA ⬆️
+
+let hasilPerhitungan = [];
+let totalSemua = {};
+let kkpData = {};
+let currentPDFHTML = '';
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadKKPData();
+    generateTable();
+    updateSignatureBlock();
+
+});
+
+// ==========================================
+//              LOAD KKP DATA
+// ==========================================
+function loadKKPData() {
+    const raw = localStorage.getItem('kkp_bapenda_loteng');
+    if (!raw) return;
+    try {
+        const all = JSON.parse(raw);
+        if (all.length === 0) return;
+        all.sort((a,b) => new Date(b.tanggalSimpan) - new Date(a.tanggalSimpan));
+        kkpData = all[0];
+        const wp = kkpData.wp || {};
+        const kkp = kkpData.kkp || {};
+
+        document.getElementById('namaWp').value = wp.namaPerusahaan || '-';
+        document.getElementById('npwpd').value = wp.npwpd || '-';
+        document.getElementById('alamatWp').value = wp.alamat || '-';
+
+        const pajakLabels = [];
+        const JENIS_PAJAK_LIST = [
+            {id:'pbjt_makmin',label:'PBJT Makanan & Minuman'},{id:'pbjt_hotel',label:'PBJT Jasa Perhotelan'},
+            {id:'pbjt_hiburan',label:'PBJT Jasa Hiburan'},{id:'pbjt_parkir',label:'PBJT Jasa Parkir'},
+            {id:'pbjt_listrik',label:'PBJT Tenaga Listrik'},{id:'pajak_air',label:'Pajak Air Tanah'},
+            {id:'pbb_p2',label:'PBB-P2'},{id:'bphtb',label:'BPHTB'},
+            {id:'reklame',label:'Pajak Reklame'},{id:'hiburan40',label:'PBJT Hiburan Tertentu (40%)'},
+        ];
+        (wp.pajakChecked||[]).forEach(pid => {
+            const found = JENIS_PAJAK_LIST.find(j=>j.id===pid);
+            if (found) pajakLabels.push(found.label);
+        });
+        if (wp.pajakLainnya) pajakLabels.push(wp.pajakLainnya);
+        document.getElementById('jenisPajakDisp').value = pajakLabels.join(', ') || '-';
+
+        if (kkp.masaDari) document.getElementById('masaPajakDari').value = kkp.masaDari;
+        if (kkp.masaSampai) document.getElementById('masaPajakSampai').value = kkp.masaSampai;
+        if (kkp.tanggal) document.getElementById('tanggalPemeriksaan').value = kkp.tanggal;
+    } catch(e) { console.error(e); }
+}
+
+function getKKPPetugasList() {
+    const list = [];
+    const tim = kkpData.tim || {};
+    if (tim.sv?.nama) list.push({nama:tim.sv.nama, nip:tim.sv.nip, jabatan:'Supervisor'});
+    if (tim.kt?.nama) list.push({nama:tim.kt.nama, nip:tim.kt.nip, jabatan:'Ketua Tim'});
+    (tim.anggota||[]).forEach(a => {
+        if (a.nama) list.push({nama:a.nama, nip:a.nip, jabatan:'Anggota Tim'});
+    });
+    return list;
+updateSignatureBlock();
+}
+
+// ==========================================
+//      FORMAT CURRENCY INPUT (AUTO TITIK)
+// ==========================================
+function formatCurrencyInput(input) {
+    let pos = input.selectionStart;
+    let oldLen = input.value.length;
+
+    let raw = input.value.replace(/[^0-9]/g, '');
+    raw = raw.replace(/^0+(?=\d)/, '');
+
+    let formatted = '';
+    if (raw.length > 0) {
+        formatted = parseInt(raw).toLocaleString('id-ID');
+    } else {
+        formatted = '0';
+    }
+
+    input.value = formatted;
+
+    let newLen = formatted.length;
+    let diff = newLen - oldLen;
+    let newPos = pos + diff;
+    if (newPos < 0) newPos = 0;
+    input.setSelectionRange(newPos, newPos);
+}
+
+function parseCurrency(str) {
+    if (!str) return 0;
+    return parseInt(str.replace(/[^0-9]/g, '')) || 0;
+}
+
+function formatRupiah(n) {
+    return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+}
+
+function formatTglID(d) {
+    return d.getDate() + ' ' + NAMA_BULAN[d.getMonth()].substring(0,3) + ' ' + d.getFullYear();
+}
+
+// ==========================================
+//         GET TARIF DARI KKP
+// ==========================================
+function getTarif() {
+    const wp = kkpData.wp || {};
+    const pajakChecked = wp.pajakChecked || [];
+    
+    const tarifMap = {
+        'pbjt_makmin': 0.10,
+        'pbjt_hotel': 0.10,
+        'pbjt_hiburan': 0.10,
+        'pbjt_parkir': 0.10,
+        'pbjt_listrik': 0.10,
+        'pajak_air': 0.25,
+        'pbb_p2': 0.25,
+        'bphtb': 0.25,
+        'reklame': 0.25,
+        'hiburan40': 0.40,
+    };
+
+    if (pajakChecked.length > 0) {
+        return tarifMap[pajakChecked[0]] || 0.10;
+    }
+    return 0.10;
+}
+
+// ==========================================
+//         GENERATE TABLE (KOSONG)
+// ==========================================
+function generateTable() {
+    const dari   = new Date(document.getElementById('masaPajakDari').value + '-01');
+    const sampai = new Date(document.getElementById('masaPajakSampai').value + '-01');
+    const tglJT  = parseInt(document.getElementById('tanggalJatuhTempo').value) || 15;
+
+    let html = '', no = 1, cur = new Date(dari);
+
+    while (cur <= sampai) {
+        const tahun = cur.getFullYear();
+        const bulan = cur.getMonth();
+
+        let jtB = bulan + 1, jtT = tahun;
+        if (jtB > 11) { jtB = 0; jtT++; }
+        const defSetor = jtT + '-' + String(jtB + 1).padStart(2,'0') + '-' + String(tglJT).padStart(2,'0');
+
+        html += '<tr data-bulan="'+bulan+'" data-tahun="'+tahun+'">'
+            + '<td>'+no+'</td>'
+            + '<td class="masa-label" style="white-space:nowrap">'+NAMA_BULAN[bulan]+' '+tahun+'</td>'
+            + '<td><input type="text" class="currency-input omzet-wp" value="0" oninput="formatCurrencyInput(this)" onchange="calculate()"></td>'
+            + '<td><input type="text" class="currency-input omzet-periksa" value="0" oninput="formatCurrencyInput(this)" onchange="calculate()"></td>'
+            + '<td><input type="date" class="tanggal-setor" value="'+defSetor+'" onchange="calculate()"></td>'
+            + '<td><select class="lapor-omzet" onchange="calculate()"><option value="ya">Ya</option><option value="tidak">Tidak</option></select></td>'
+            + '<td class="output-cell c-pajak-terutang">-</td>'
+            + '<td class="output-cell c-pajak-dibayar">-</td>'
+            + '<td class="output-cell c-selisih">-</td>'
+            + '<td class="c-jatuh-tempo" style="white-space:nowrap;font-size:10px">-</td>'
+            + '<td class="c-bulan-telat" style="font-size:10px">-</td>'
+            + '<td class="output-cell c-denda">-</td>'
+            + '<td class="output-cell c-kenaikan">-</td>'
+            + '<td class="output-cell c-denda-adm">-</td>'
+            + '<td class="output-cell c-total-kb" style="font-weight:700">-</td>'
+            + '</tr>';
+        no++;
+        cur.setMonth(cur.getMonth() + 1);
+    }
+    document.getElementById('tableBody').innerHTML = html;
+    calculate();
+}
+
+// ==========================================
+//         RADIO SELECT
+// ==========================================
+function selectRadio(n) {
+    document.querySelectorAll('.radio-item').forEach(i => i.classList.remove('selected'));
+    document.getElementById('radio'+n).classList.add('selected');
+    document.querySelector('#radio'+n+' input').checked = true;
+    calculate();
+}
+
+// ==========================================
+//         HITUNG BULAN
+// ==========================================
+function hitungBulan(dari, sampai) {
+    if (sampai <= dari) return 0;
+    let b = (sampai.getFullYear()-dari.getFullYear())*12;
+    b += sampai.getMonth()-dari.getMonth();
+    if (sampai.getDate() > dari.getDate()) b++;
+    return Math.max(0, Math.min(b, 24));
+}
+
+// ==========================================
+//         TERBILANG
+// ==========================================
+function angkaTerbilang(angka) {
+    const b = ['','Satu','Dua','Tiga','Empat','Lima','Enam','Tujuh','Delapan','Sembilan','Sepuluh','Sebelas'];
+    function T(n) {
+        n = Math.floor(n);
+        if (n < 12) return b[n];
+        if (n < 20) return b[n-10]+' Belas';
+        if (n < 100) return b[Math.floor(n/10)]+' Puluh '+b[n%10];
+        if (n < 200) return 'Seratus '+T(n-100);
+        if (n < 1000) return b[Math.floor(n/100)]+' Ratus '+T(n%100);
+        if (n < 2000) return 'Seribu '+T(n-1000);
+        if (n < 1e6) return T(Math.floor(n/1e3))+' Ribu '+T(n%1e3);
+        if (n < 1e9) return T(Math.floor(n/1e6))+' Juta '+T(n%1e6);
+        if (n < 1e12) return T(Math.floor(n/1e9))+' Milyar '+T(n%1e9);
+        return n;
+    }
+    if (angka === 0) return 'Nol Rupiah';
+    return T(Math.floor(angka)).trim().replace(/\s+/g,' ') + ' Rupiah';
+}
+
+// ==========================================
+//              CALCULATE
+// ==========================================
+function calculate() {
+    const tarif = getTarif();
+    if (tarif === null) return;
+
+    const tanggalPeriksa = new Date(document.getElementById('tanggalPemeriksaan').value);
+    const tglJT          = parseInt(document.getElementById('tanggalJatuhTempo').value) || 15;
+    const statusWp       = document.getElementById('statusWp').value;
+    const jenisPenetapan = document.querySelector('input[name="jenisPenetapan"]:checked').value;
+    const tarifBunga     = statusWp === 'kooperatif' ? 0.018 : 0.022;
+
+    let kenaikanPersen = 0;
+    if (jenisPenetapan === 'skpdkb-jabatan') {
+        kenaikanPersen = tarif >= 0.25 ? 0.50 : 0.25;
+    } else if (jenisPenetapan === 'skpdkbt') {
+        kenaikanPersen = 1.00;
+    }
+
+    const rows = document.querySelectorAll('#tableBody tr');
+    let totTerutang=0, totDibayar=0, totKekurangan=0, totDenda=0, totKenaikan=0, totDendaAdm=0, jmlTidakLapor=0;
+    hasilPerhitungan = [];
+
+    rows.forEach(row => {
+        const bulan = parseInt(row.dataset.bulan);
+        const tahun = parseInt(row.dataset.tahun);
+
+        const omzetWp      = parseCurrency(row.querySelector('.omzet-wp').value);
+        const omzetPeriksa = parseCurrency(row.querySelector('.omzet-periksa').value);
+        const tglSetorVal  = row.querySelector('.tanggal-setor').value;
+        const laporOmzet   = row.querySelector('.lapor-omzet').value;
+
+        const dppWp      = omzetWp / (1 + tarif);
+        const dppPeriksa = omzetPeriksa / (1 + tarif);
+
+        const pajakTerutang = Math.round(dppPeriksa * tarif);
+        const pajakDibayar  = Math.round(dppWp * tarif);
+        const selisih       = pajakTerutang - pajakDibayar;
+
+        let jtB = bulan+1, jtT = tahun;
+        if (jtB > 11) { jtB=0; jtT++; }
+        const jatuhTempo = new Date(jtT, jtB, tglJT);
+
+        const actualSetor = new Date(tglSetorVal);
+        const isTelat = actualSetor > jatuhTempo;
+        const bulanTelatBayar = isTelat ? hitungBulan(jatuhTempo, actualSetor) : 0;
+
+        const bulanKeterlambatan = hitungBulan(jatuhTempo, tanggalPeriksa);
+
+        let denda = 0;
+        if (selisih > 0 && bulanKeterlambatan > 0) {
+            denda = bulanKeterlambatan * tarifBunga * selisih;
+        }
+        if (isTelat && pajakDibayar > 0) {
+            denda += bulanTelatBayar * tarifBunga * pajakDibayar;
+        }
+
+        const kenaikanVal = selisih > 0 ? selisih * kenaikanPersen : 0;
+
+        const dendaAdmBln = (laporOmzet === 'tidak') ? 25000 : 0;
+        if (laporOmzet === 'tidak') jmlTidakLapor++;
+
+        const totalKB = selisih + denda + kenaikanVal + dendaAdmBln;
+
+        row.querySelector('.masa-label').textContent = NAMA_BULAN[bulan]+' '+tahun + (isTelat ? ' ⚠️' : '');
+        if (isTelat) row.classList.add('highlight-row'); else row.classList.remove('highlight-row');
+
+        row.querySelector('.c-pajak-terutang').textContent = formatRupiah(pajakTerutang);
+        row.querySelector('.c-pajak-dibayar').textContent  = formatRupiah(pajakDibayar);
+        row.querySelector('.c-selisih').textContent        = formatRupiah(selisih);
+        row.querySelector('.c-jatuh-tempo').textContent    = formatTglID(jatuhTempo);
+        row.querySelector('.c-bulan-telat').innerHTML      = isTelat
+            ? '<span class="status-telat">'+bulanKeterlambatan+' bln ⚠️<br><small>(bayar telat '+bulanTelatBayar+' bln)</small></span>'
+            : '<span class="status-tepat">'+bulanKeterlambatan+' bln ✓</span>';
+        row.querySelector('.c-denda').textContent     = formatRupiah(Math.round(denda));
+        row.querySelector('.c-kenaikan').textContent   = formatRupiah(Math.round(kenaikanVal));
+        row.querySelector('.c-denda-adm').innerHTML    = dendaAdmBln > 0
+            ? '<span class="lapor-tidak">Rp 25.000</span>' : '<span class="lapor-ya">Rp 0</span>';
+        row.querySelector('.c-total-kb').textContent   = formatRupiah(Math.round(totalKB));
+
+        totTerutang   += pajakTerutang;
+        totDibayar    += pajakDibayar;
+        totKekurangan += selisih;
+        totDenda      += denda;
+        totKenaikan   += kenaikanVal;
+        totDendaAdm   += dendaAdmBln;
+
+        hasilPerhitungan.push({
+            no: row.children[0].textContent,
+            masaPajak: NAMA_BULAN[bulan]+' '+tahun,
+            omzetWp, omzetPeriksa, tanggalSetor: tglSetorVal,
+            laporOmzet, dppWp: Math.round(dppWp), dppPeriksa: Math.round(dppPeriksa),
+            pajakTerutang, pajakDibayar, selisih,
+            jatuhTempo: formatTglID(jatuhTempo),
+            bulanKeterlambatan, bulanTelatBayar, isTelat,
+            tarifBungaStr: (tarifBunga*100).toFixed(1)+'%',
+            denda: Math.round(denda), kenaikan: Math.round(kenaikanVal),
+            dendaAdm: dendaAdmBln, totalKB: Math.round(totalKB)
+        });
+    });
+
+    const totalBayar = totKekurangan + totDenda + totKenaikan + totDendaAdm;
+
+    totalSemua = {
+        pajakTerutang: totTerutang, kreditPajak: totDibayar,
+        kekurangan: totKekurangan, denda: Math.round(totDenda),
+        kenaikan: Math.round(totKenaikan), dendaAdmin: totDendaAdm,
+        jumlahTidakLapor: jmlTidakLapor, totalBayar: Math.round(totalBayar)
+    };
+
+    document.getElementById('totalPajakTerutang').textContent   = formatRupiah(totTerutang);
+    document.getElementById('totalKreditPajak').textContent     = formatRupiah(totDibayar);
+    document.getElementById('totalKekuranganPajak').textContent = formatRupiah(totKekurangan);
+    document.getElementById('totalDenda').textContent           = formatRupiah(Math.round(totDenda));
+    document.getElementById('totalKenaikan').textContent        = formatRupiah(Math.round(totKenaikan));
+    document.getElementById('totalDendaAdmin').textContent      = formatRupiah(totDendaAdm);
+    document.getElementById('dendaAdmDetail').textContent       = jmlTidakLapor + ' masa × Rp 25.000 = ' + formatRupiah(totDendaAdm);
+    document.getElementById('totalBayar').textContent           = formatRupiah(Math.round(totalBayar));
+    document.getElementById('terbilang').textContent            = angkaTerbilang(Math.round(totalBayar));
+}
+
+// ==========================================
+//         RESET FORM
+// ==========================================
+function resetForm() {
+    if (!confirm('Apakah Anda yakin ingin reset semua data?')) return;
+    generateTable();
+}
+
+// ==========================================
+//   BUILD PAGE HTML UNTUK PDF (FIXED)
+// ==========================================
+function buildPage1HTML() {
+    const wp = kkpData.wp || {};
+    const kkp = kkpData.kkp || {};
+    const jenisPajak = document.getElementById('jenisPajakDisp').value || '-';
+    const tarif = (getTarif() * 100).toFixed(0);
+
+    const root = document.createElement('div');
+    root.style.position = 'fixed';
+    root.style.left = '-100000px';
+    root.style.top = '0';
+    root.style.zIndex = '-1';
+    root.style.background = '#fff';
+
+    root.innerHTML = `
+      <div id="page1" style="width:297mm;height:210mm;padding:12mm;background:#fff;color:#000;font-family:'Times New Roman',serif;box-sizing:border-box">
+        <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:center;align-items:center;gap:10px;">
+            <img src="${LOGO_BASE64}" style="width:50px;height:50px;object-fit:contain" onerror="this.style.display='none'">
+            <div>
+              <div style="font-size:12pt;font-weight:bold;">PEMERINTAH KABUPATEN LOMBOK TENGAH</div>
+              <div style="font-size:14pt;font-weight:900;">BADAN PENDAPATAN DAERAH</div>
+              <div style="font-size:8pt;">Jalan Raden Puguh Puyung – Praya</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align:center;font-size:12pt;font-weight:bold;text-decoration:underline;margin-bottom:10px;">
+          KERTAS KERJA PENGHITUNGAN PAJAK PEMERIKSAAN
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;font-size:10pt;line-height:1.5;">
+          <tr><td style="width:180px">Nama Perusahaan</td><td style="width:10px">:</td><td>${wp.namaPerusahaan || '-'}</td></tr>
+          <tr><td>Nama Usaha</td><td>:</td><td>${wp.namaUsaha || '-'}</td></tr>
+          <tr><td>NPWPD</td><td>:</td><td>${wp.npwpd || '-'}</td></tr>
+          <tr><td>Alamat</td><td>:</td><td>${wp.alamat || '-'}</td></tr>
+          <tr><td>Jenis Pajak</td><td>:</td><td>${jenisPajak}</td></tr>
+          <tr><td>Tarif Pajak</td><td>:</td><td>${tarif}%</td></tr>
+          <tr><td>Masa Pajak</td><td>:</td><td>${document.getElementById('masaPajakDari').value} s.d. ${document.getElementById('masaPajakSampai').value}</td></tr>
+          <tr><td>Tanggal Pemeriksaan</td><td>:</td><td>${document.getElementById('tanggalPemeriksaan').value}</td></tr>
+          <tr><td>Nomor KKP</td><td>:</td><td>${kkp.nomor || '-'}</td></tr>
+          <tr><td>Nomor SPT</td><td>:</td><td>${kkp.noSPT || '-'}</td></tr>
+        </table>
+      </div>
+    `;
+
+    document.body.appendChild(root);
+    return root;
+}
+
+function buildPage2HTML() {
+    const wp = kkpData.wp || {};
+    const petugas = getKKPPetugasList();
+    const pemeriksaUtama = petugas[0] || {};
+    const tarif = (getTarif() * 100).toFixed(0);
+
+    const tglPeriksaVal = document.getElementById('tanggalPemeriksaan')?.value || '';
+    let tglPeriksaText = '-';
+    if (tglPeriksaVal) {
+        const d = new Date(tglPeriksaVal);
+        if (!isNaN(d.getTime())) {
+            tglPeriksaText = `${d.getDate()} ${NAMA_BULAN[d.getMonth()]} ${d.getFullYear()}`;
+        } else {
+            tglPeriksaText = tglPeriksaVal;
+        }
+    }
+
+    const root = document.createElement('div');
+    root.style.position = 'fixed';
+    root.style.left = '-100000px';
+    root.style.top = '0';
+    root.style.zIndex = '-1';
+    root.style.background = '#fff';
+
+    const rows = hasilPerhitungan.map((r, i) => `
+      <tr>
+        <td style="border:1px solid #000;padding:2px">${i + 1}</td>
+        <td style="border:1px solid #000;padding:2px">${r.masaPajak}</td>
+        <td style="border:1px solid #000;padding:2px;text-align:right">${formatRupiah(r.omzetWp)}</td>
+        <td style="border:1px solid #000;padding:2px;text-align:right">${formatRupiah(r.omzetPeriksa)}</td>
+        <td style="border:1px solid #000;padding:2px;text-align:right">${formatRupiah(r.pajakTerutang)}</td>
+        <td style="border:1px solid #000;padding:2px;text-align:right">${formatRupiah(r.pajakDibayar)}</td>
+        <td style="border:1px solid #000;padding:2px;text-align:right">${formatRupiah(r.selisih)}</td>
+        <td style="border:1px solid #000;padding:2px;text-align:right">${formatRupiah(r.denda)}</td>
+        <td style="border:1px solid #000;padding:2px;text-align:right">${formatRupiah(r.kenaikan)}</td>
+        <td style="border:1px solid #000;padding:2px;text-align:right">${formatRupiah(r.dendaAdm)}</td>
+        <td style="border:1px solid #000;padding:2px;text-align:right;font-weight:bold">${formatRupiah(r.totalKB)}</td>
+      </tr>
+    `).join('');
+
+    root.innerHTML = `
+      <div id="page2" style="width:297mm;height:210mm;padding:10mm;background:#fff;color:#000;font-family:'Times New Roman',serif;box-sizing:border-box;display:flex;flex-direction:column;">
+        <div style="text-align:center;font-size:12pt;font-weight:bold;text-decoration:underline;margin-bottom:8px;">
+          TABEL PENGHITUNGAN PAJAK PEMERIKSAAN
+        </div>
+        <div style="text-align:center;font-size:9pt;margin-bottom:8px;">
+          ${wp.namaPerusahaan || '-'} | NPWPD: ${wp.npwpd || '-'} | Tarif: ${tarif}%
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;font-size:7pt;">
+          <thead>
+            <tr style="background:#eee;font-weight:bold">
+              <th style="border:1px solid #000;padding:2px">No</th>
+              <th style="border:1px solid #000;padding:2px">Masa</th>
+              <th style="border:1px solid #000;padding:2px">Omzet WP</th>
+              <th style="border:1px solid #000;padding:2px">Omzet Periksa</th>
+              <th style="border:1px solid #000;padding:2px">Pajak Terutang</th>
+              <th style="border:1px solid #000;padding:2px">Pajak Dibayar</th>
+              <th style="border:1px solid #000;padding:2px">Selisih</th>
+              <th style="border:1px solid #000;padding:2px">Denda</th>
+              <th style="border:1px solid #000;padding:2px">Kenaikan</th>
+              <th style="border:1px solid #000;padding:2px">Denda Adm</th>
+              <th style="border:1px solid #000;padding:2px">Total KB</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows || `<tr><td colspan="11" style="border:1px solid #000;padding:6px;text-align:center">Tidak ada data</td></tr>`}
+          </tbody>
+          <tfoot>
+            <tr style="font-weight:bold;background:#f3f3f3">
+              <td colspan="6" style="border:1px solid #000;padding:2px;text-align:center">TOTAL</td>
+              <td style="border:1px solid #000;padding:2px;text-align:right">${formatRupiah(totalSemua.kekurangan || 0)}</td>
+              <td style="border:1px solid #000;padding:2px;text-align:right">${formatRupiah(totalSemua.denda || 0)}</td>
+              <td style="border:1px solid #000;padding:2px;text-align:right">${formatRupiah(totalSemua.kenaikan || 0)}</td>
+              <td style="border:1px solid #000;padding:2px;text-align:right">${formatRupiah(totalSemua.dendaAdmin || 0)}</td>
+              <td style="border:1px solid #000;padding:2px;text-align:right">${formatRupiah(totalSemua.totalBayar || 0)}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <!-- BLOK TANDA TANGAN -->
+        <div style="margin-top:auto;padding-top:8px;">
+          <table style="width:100%;border-collapse:collapse;font-size:8.5pt;">
+            <tr>
+              <td style="width:50%;text-align:center;vertical-align:top;padding:4px;">
+                Praya, ${tglPeriksaText}<br>
+                Yang memberi keterangan,<br><br><br><br>
+                <span style="font-weight:bold;text-decoration:underline;">
+                  ${wp.namaKeterangan || wp.namaPerusahaan || '________________'}
+                </span><br>
+                <span style="font-size:8pt;">
+                  ${wp.jabatanKeterangan || 'Perwakilan Wajib Pajak'}
+                </span>
+              </td>
+              <td style="width:50%;text-align:center;vertical-align:top;padding:4px;">
+                Praya, ${tglPeriksaText}<br>
+                ${pemeriksaUtama.jabatan || 'Pemeriksa'},<br><br><br><br>
+                <span style="font-weight:bold;text-decoration:underline;">
+                  ${pemeriksaUtama.nama || '________________'}
+                </span><br>
+                <span style="font-size:8pt;">
+                  NIP. ${pemeriksaUtama.nip || '________________'}
+                </span>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(root);
+    return root;
+}
+
+// ==========================================
+//         📥 DOWNLOAD PDF (FIXED)
+// ==========================================
+async function downloadPDF() {
+    calculate();
+
+    const namaWp = (document.getElementById('namaWp').value || 'WP').trim();
+    let page1Wrap = null;
+    let page2Wrap = null;
+
+    try {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            throw new Error('Library jsPDF tidak termuat.');
+        }
+        if (typeof window.html2canvas !== 'function') {
+            throw new Error('Library html2canvas tidak termuat.');
+        }
+
+        alert('Memproses PDF, mohon tunggu...');
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+        page1Wrap = buildPage1HTML();
+        page2Wrap = buildPage2HTML();
+
+        const page1El = page1Wrap.querySelector('#page1');
+        const page2El = page2Wrap.querySelector('#page2');
+
+        await document.fonts?.ready;
+
+        const canvas1 = await html2canvas(page1El, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff'
+        });
+        pdf.addImage(canvas1.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 297, 210);
+
+        const canvas2 = await html2canvas(page2El, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff'
+        });
+        pdf.addPage('a4', 'landscape');
+        pdf.addImage(canvas2.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 297, 210);
+
+        const safeName = namaWp.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_');
+        const fileName = `SKPDKB_${safeName}_${new Date().toISOString().slice(0,10)}.pdf`;
+        pdf.save(fileName);
+
+        alert('✅ PDF berhasil didownload: ' + fileName);
+    } catch (err) {
+        console.error(err);
+        alert('❌ Gagal membuat PDF: ' + (err.message || err));
+    } finally {
+        if (page1Wrap?.parentNode) page1Wrap.parentNode.removeChild(page1Wrap);
+        if (page2Wrap?.parentNode) page2Wrap.parentNode.removeChild(page2Wrap);
+    }
+}
+
+// ==========================================
+//         📊 DOWNLOAD EXCEL
+// ==========================================
+function downloadExcel() {
+    calculate();
+
+    const namaWp         = document.getElementById('namaWp').value || 'WP';
+    const npwpd          = document.getElementById('npwpd').value || '-';
+    const alamat         = document.getElementById('alamatWp').value || '-';
+    const jenisPajak     = document.getElementById('jenisPajakDisp').value || '-';
+    const tarif          = getTarif() || 0;
+    const tglPemeriksaan = document.getElementById('tanggalPemeriksaan').value;
+    const statusWpText   = document.getElementById('statusWp').selectedOptions[0].text;
+    const penetapanText  = document.querySelector('input[name="jenisPenetapan"]:checked').parentElement.querySelector('span').textContent;
+    const tarifBungaStr  = document.getElementById('statusWp').value === 'kooperatif' ? '1,8%' : '2,2%';
+
+    // SHEET 1: DATA WP
+    const s1 = [
+        ['PENGHITUNGAN PAJAK PEMERIKSAAN - SKPDKB / SKPDKBT'],
+        [''],
+        ['DATA WAJIB PAJAK'],
+        ['Nama WP',              namaWp],
+        ['NPWPD',                npwpd],
+        ['Alamat',               alamat],
+        ['Jenis Pajak',          jenisPajak],
+        ['Tarif Pajak',          (tarif*100)+'%'],
+        ['Tanggal Pemeriksaan',  tglPemeriksaan],
+        ['Jenis Penetapan',      penetapanText],
+        ['Status WP',            statusWpText],
+        ['Tarif Bunga',          tarifBungaStr],
+    ];
+    const ws1 = XLSX.utils.aoa_to_sheet(s1);
+    ws1['!cols'] = [{wch:25},{wch:55}];
+    ws1['!merges'] = [{s:{r:0,c:0},e:{r:0,c:1}}];
+
+    // SHEET 2: TABEL PERHITUNGAN
+    const headers = [
+        'No','Masa Pajak',
+        'Omzet WP (Bruto)','Omzet Pemeriksaan','Tanggal Setor','Lapor Omzet',
+        'DPP WP','DPP Pemeriksaan',
+        'Pajak Terutang','Pajak Dibayar','Selisih',
+        'Jatuh Tempo','Bulan Keterlambatan','Bulan Telat Bayar',
+        'Tarif Denda','Denda Bunga','Kenaikan','Denda Adm','Total Kurang Bayar'
+    ];
+    const s2 = [
+        ['TABEL PERHITUNGAN KURANG BAYAR PAJAK DAERAH'],
+        ['Nama WP: '+namaWp+'  |  '+jenisPajak+'  |  Pemeriksaan: '+tglPemeriksaan],
+        [''],
+        headers
+    ];
+
+    hasilPerhitungan.forEach((h,i) => {
+        s2.push([
+            h.no, h.masaPajak,
+            h.omzetWp, h.omzetPeriksa, h.tanggalSetor, h.laporOmzet==='ya'?'Ya':'Tidak',
+            h.dppWp, h.dppPeriksa,
+            h.pajakTerutang, h.pajakDibayar, h.selisih,
+            h.jatuhTempo, h.bulanKeterlambatan, h.bulanTelatBayar,
+            h.tarifBungaStr, h.denda, h.kenaikan, h.dendaAdm, h.totalKB
+        ]);
+    });
+
+    s2.push([]);
+    s2.push([
+        '','TOTAL',
+        hasilPerhitungan.reduce((s,h)=>s+h.omzetWp,0),
+        hasilPerhitungan.reduce((s,h)=>s+h.omzetPeriksa,0),
+        '','',
+        hasilPerhitungan.reduce((s,h)=>s+h.dppWp,0),
+        hasilPerhitungan.reduce((s,h)=>s+h.dppPeriksa,0),
+        totalSemua.pajakTerutang,totalSemua.kreditPajak,totalSemua.kekurangan,
+        '','','','',
+        totalSemua.denda,totalSemua.kenaikan,totalSemua.dendaAdmin,
+        totalSemua.totalBayar
+    ]);
+
+    const ws2 = XLSX.utils.aoa_to_sheet(s2);
+    ws2['!cols'] = [
+        {wch:5},{wch:18},{wch:18},{wch:18},{wch:14},{wch:10},
+        {wch:16},{wch:16},{wch:16},{wch:16},{wch:16},
+        {wch:15},{wch:12},{wch:12},{wch:10},{wch:16},{wch:14},{wch:12},{wch:18}
+    ];
+    ws2['!merges'] = [{s:{r:0,c:0},e:{r:0,c:18}},{s:{r:1,c:0},e:{r:1,c:18}}];
+
+    const numFmtXls = '#,##0';
+    for (let r = 4; r < 4 + hasilPerhitungan.length + 2; r++) {
+        [2,3,6,7,8,9,10,15,16,17,18].forEach(c => {
+            const ref = XLSX.utils.encode_cell({r:r,c:c});
+            if (ws2[ref] && typeof ws2[ref].v === 'number') {
+                ws2[ref].z = numFmtXls;
+            }
+        });
+    }
+
+    // SHEET 3: RINGKASAN
+    const s3 = [
+        ['RINGKASAN PERHITUNGAN SKPDKB / SKPDKBT'],
+        [''],
+        ['Nama WP',         namaWp],
+        ['NPWPD',           npwpd],
+        ['Jenis Pajak',     jenisPajak],
+        ['Jenis Penetapan', penetapanText],
+        ['Tanggal SKPDKB',  tglPemeriksaan],
+        [''],
+        ['URAIAN','JUMLAH (Rp)'],
+        ['Total Pokok Pajak Terutang',         totalSemua.pajakTerutang],
+        ['Total Kredit Pajak (Sudah Dibayar)', totalSemua.kreditPajak],
+        ['Kekurangan Pokok Pajak',             totalSemua.kekurangan],
+        [''],
+        ['SANKSI ADMINISTRASI',''],
+        ['Denda Bunga Keterlambatan',          totalSemua.denda],
+        ['Kenaikan',                           totalSemua.kenaikan],
+        ['Denda Administrasi ('+totalSemua.jumlahTidakLapor+' masa × Rp 25.000)', totalSemua.dendaAdmin],
+        [''],
+        ['TOTAL YANG HARUS DIBAYARKAN',        totalSemua.totalBayar],
+        [''],
+        ['TERBILANG:', angkaTerbilang(totalSemua.totalBayar)],
+    ];
+    const ws3 = XLSX.utils.aoa_to_sheet(s3);
+    ws3['!cols'] = [{wch:45},{wch:25}];
+    ws3['!merges'] = [{s:{r:0,c:0},e:{r:0,c:1}}];
+
+    [9,10,11,14,15,16,18].forEach(r => {
+        const ref = XLSX.utils.encode_cell({r:r,c:1});
+        if (ws3[ref] && typeof ws3[ref].v === 'number') ws3[ref].z = numFmtXls;
+    });
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws1, 'Data WP');
+    XLSX.utils.book_append_sheet(wb, ws2, 'Perhitungan');
+    XLSX.utils.book_append_sheet(wb, ws3, 'Ringkasan');
+
+    const fileName = 'SKPDKB_'+namaWp.replace(/\s+/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.xlsx';
+    XLSX.writeFile(wb, fileName);
+    alert('✅ File Excel berhasil di-download!\n\n📄 File: '+fileName+'\n\n📑 3 Sheet:\n• Data WP\n• Perhitungan\n• Ringkasan');
+}
+window.generateTable = generateTable;
+window.calculate = calculate;
+window.selectRadio = selectRadio;
+window.resetForm = resetForm;
+window.downloadPDF = downloadPDF;
+window.downloadExcel = downloadExcel;
+window.formatCurrencyInput = formatCurrencyInput;
+</script>
+
+</body>
+</html>

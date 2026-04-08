@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KKP - Bapenda Lombok Tengah</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* ===== RESET & BASE ===== */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1e3c72,#2a5298);min-height:100vh;display:flex;flex-direction:column}
+
+        /* ===== TOPBAR ===== */
+        .topbar{background:linear-gradient(135deg,#0d2137,#1e3c72);color:#fff;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1000;box-shadow:0 2px 15px rgba(0,0,0,.4)}
+        .topbar h1{font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px}
+        .topbar-actions{display:flex;gap:8px;align-items:center}
+        .badge-saved{background:#28a745;color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;display:none}
+
+        /* ===== LAYOUT ===== */
+        .app-body{display:flex;flex:1;gap:0;max-width:100%;margin:0}
+        .sidebar{width:300px;min-width:300px;background:#1a2d4a;color:#fff;height:calc(100vh - 50px);overflow-y:auto;position:sticky;top:50px;padding:0}
+        .main-content{flex:1;background:#f0f2f5;overflow-y:auto;padding:20px}
+
+        /* ===== SIDEBAR ===== */
+        .sidebar-header{background:#0d2137;padding:15px;text-align:center;border-bottom:1px solid rgba(255,255,255,.1)}
+        .sidebar-header h3{font-size:13px;color:#90caf9}
+        .sidebar-nav{padding:10px 0}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:12px 18px;cursor:pointer;transition:.2s;border-left:3px solid transparent;font-size:13px;color:rgba(255,255,255,.7)}
+        .nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+        .nav-item.active{background:rgba(255,255,255,.12);border-left-color:#4fc3f7;color:#fff;font-weight:600}
+        .nav-item .nav-icon{font-size:16px;width:22px;text-align:center}
+        .nav-badge{margin-left:auto;background:#4fc3f7;color:#0d2137;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700}
+        .nav-section{padding:8px 18px 4px;font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px}
+        .sidebar-footer{padding:15px;border-top:1px solid rgba(255,255,255,.1);margin-top:auto}
+
+        /* ===== PANEL ===== */
+        .panel{display:none}
+        .panel.active{display:block}
+        .card{background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.08);margin-bottom:16px;overflow:hidden}
+        .card-header{background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
+        .card-header h3{font-size:14px;font-weight:700}
+        .card-body{padding:20px}
+
+        /* ===== FORM ===== */
+        .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+        .form-grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+        .form-group{display:flex;flex-direction:column;gap:5px}
+        .form-group label{font-size:12px;font-weight:600;color:#444}
+        .form-group input,.form-group select,.form-group textarea{padding:9px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:13px;transition:.2s;width:100%}
+        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#2a5298;box-shadow:0 0 0 3px rgba(42,82,152,.1)}
+        textarea{resize:vertical;font-family:'Segoe UI',sans-serif}
+        .form-full{grid-column:1/-1}
+        .form-hint{font-size:11px;color:#888;margin-top:2px}
+
+        /* ===== CHECKBOX PAJAK ===== */
+        .checkbox-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-top:5px}
+        .check-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border:2px solid #e0e0e0;border-radius:8px;cursor:pointer;transition:.2s;font-size:12px}
+        .check-item:hover{border-color:#2a5298;background:#f0f4ff}
+        .check-item.checked{border-color:#2a5298;background:#e8f0fe;font-weight:600}
+        .check-item input[type="checkbox"]{width:16px;height:16px;cursor:pointer;accent-color:#2a5298}
+
+        /* ===== TIM PEMERIKSA ===== */
+        .tim-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+        .tim-table th{background:#1e3c72;color:#fff;padding:8px 10px;text-align:left}
+        .tim-table td{padding:6px 8px;border-bottom:1px solid #eee;vertical-align:middle}
+        .tim-table td input,.tim-table td select{width:100%;padding:5px 8px;border:1px solid #ddd;border-radius:5px;font-size:12px}
+        .tim-table td input:focus,.tim-table td select:focus{outline:none;border-color:#2a5298}
+        .ttd-select{padding:4px 8px;border:1px solid #ddd;border-radius:5px;font-size:11px;background:#fff}
+
+        /* ===== BTN ===== */
+        .btn{padding:9px 20px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+        .btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.2)}
+        .btn:active{transform:translateY(0)}
+        .btn-primary{background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff}
+        .btn-success{background:linear-gradient(135deg,#155724,#28a745);color:#fff}
+        .btn-danger{background:linear-gradient(135deg,#7b1a1a,#dc3545);color:#fff}
+        .btn-warning{background:linear-gradient(135deg,#7d5a00,#ffc107);color:#212529}
+        .btn-info{background:linear-gradient(135deg,#0c5460,#17a2b8);color:#fff}
+        .btn-secondary{background:linear-gradient(135deg,#3d4550,#6c757d);color:#fff}
+        .btn-sm{padding:6px 14px;font-size:12px}
+        .btn-xs{padding:4px 10px;font-size:11px}
+        .btn-group{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
+
+        /* ===== BA ITEM ===== */
+        .ba-item{background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:14px;margin-bottom:10px;position:relative}
+        .ba-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px}
+        .ba-item-num{background:#1e3c72;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+        .ba-isi-list{list-style:none;counter-reset:ba-counter}
+        .ba-isi-item{counter-increment:ba-counter;display:flex;gap:8px;margin-bottom:8px}
+        .ba-isi-item::before{content:counter(ba-counter)'.';font-weight:600;min-width:18px;padding-top:9px;font-size:13px}
+        .ba-isi-item textarea{flex:1;min-height:80px;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:'Segoe UI',sans-serif}
+
+        /* ===== DOKUMEN ITEM ===== */
+        .dok-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+        .dok-table th{background:#1e3c72;color:#fff;padding:8px;text-align:center}
+        .dok-table td{padding:6px;border:1px solid #ddd;text-align:center}
+        .dok-table td input{width:100%;padding:5px;border:1px solid #ddd;border-radius:4px;font-size:12px}
+        .dok-table td select{width:100%;padding:5px;border:1px solid #ddd;border-radius:4px;font-size:11px}
+
+        /* ===== INFO BOX ===== */
+        .info-box{padding:12px 15px;border-radius:0 8px 8px 0;font-size:12px;margin:10px 0}
+        .info-blue{background:#e3f2fd;border-left:4px solid #2196f3}
+        .info-yellow{background:#fff9c4;border-left:4px solid #ffc107}
+        .info-green{background:#e8f5e9;border-left:4px solid #4caf50}
+
+        /* ===== MODAL (PREVIEW) ===== */
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;justify-content:center;align-items:flex-start;z-index:9999;padding:20px;overflow-y:auto}
+        .modal-overlay.active{display:flex}
+        .modal-box{background:#fff;border-radius:12px;width:100%;max-width:950px;margin:auto;overflow:hidden;animation:fadeIn .3s}
+        @keyframes fadeIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+        .modal-header{background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+        .modal-header h3{font-size:15px}
+        .modal-close{background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;transition:.2s}
+        .modal-close:hover{background:rgba(255,255,255,.4)}
+        .modal-body{padding:30px;background:#f9f9f9;max-height:75vh;overflow-y:auto}
+        .modal-footer{padding:14px 20px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:10px;background:#fff}
+
+        /* ===== DOKUMEN PREVIEW (A4) ===== */
+        .doc-page{
+            background:#fff;
+            width:210mm;
+            min-height:297mm;
+            margin:0 auto 20px;
+            padding:20mm;
+            font-family:'Times New Roman',serif;
+            font-size:11pt;
+            line-height:1.5;
+            box-shadow:0 4px 20px rgba(0,0,0,.3);
+            color:#000;
+        }
+        
+        .doc-header{display:flex;align-items:center;gap:12px;border-bottom:3px solid #000;padding-bottom:8px;margin-bottom:5px}
+        .doc-header-logo{width:60px;height:60px;flex-shrink:0}
+        .doc-header-logo img{width:100%;height:100%;object-fit:contain}
+        .doc-header-text{flex:1;text-align:center}
+        .doc-header-text .instansi1{font-size:12pt;font-weight:700;letter-spacing:.3px;margin:0}
+        .doc-header-text .instansi2{font-size:14pt;font-weight:900;letter-spacing:.5px;margin:0}
+        .doc-header-text .instansi3{font-size:10pt;letter-spacing:.2px;margin:0}
+        .doc-header-text .alamat{font-size:8.5pt;color:#000;line-height:1.2;margin:2px 0 0 0}
+        .doc-line2{border-bottom:1px solid #000;margin-bottom:12px}
+        .doc-title{text-align:center;margin:12px 0 10px;font-size:13pt;font-weight:700;letter-spacing:.5px;text-decoration:underline}
+        .doc-intro{text-align:justify;margin-bottom:10px;font-size:11pt;color:#000}
+        .doc-tabel-ident{margin-left:15px;margin-bottom:10px;width:auto;border-collapse:collapse}
+        .doc-tabel-ident tr td{padding:2px 4px;font-size:11pt;vertical-align:top;color:#000}
+        .doc-tabel-ident tr td:first-child{width:120px}
+        .doc-tabel-ident tr td:nth-child(2){width:15px;text-align:center}
+        .doc-isi-title{margin-bottom:6px;font-size:11pt;color:#000}
+        .doc-isi-list{margin-left:0;padding-left:0;list-style:none}
+        .doc-isi-list li{display:flex;gap:6px;margin-bottom:8px;text-align:justify;font-size:11pt;color:#000}
+        .doc-isi-list li .num{min-width:18px;font-weight:600;flex-shrink:0}
+        .doc-penutup{margin-top:10px;text-align:justify;font-size:11pt;color:#000}
+        .doc-ttd-section{margin-top:18px;display:flex;justify-content:space-between;gap:20px}
+        .doc-ttd-box{text-align:center;width:48%}
+        .doc-ttd-box .ttd-judul{font-size:11pt;margin-bottom:3px;color:#000}
+        .doc-ttd-box .ttd-ruang{height:50px;display:block}
+        .doc-ttd-box .ttd-nama{font-weight:700;font-size:11pt;text-decoration:underline;margin-top:2px;color:#000;display:block}
+        .doc-ttd-box .ttd-jabatan{font-size:10pt;color:#000;display:block}
+        .doc-ttd-box .ttd-nip{font-size:10pt;color:#000;display:block}
+        .doc-tempat-tgl{text-align:right;margin-top:12px;font-size:11pt;color:#000}
+        
+        /* Dokumen list */
+        .dok-preview-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:10pt;color:#000}
+        .dok-preview-table th{background:#1e3c72;color:#fff;padding:5px 6px;text-align:center;border:1px solid #000;font-weight:700}
+        .dok-preview-table td{padding:4px 6px;border:1px solid #000;text-align:center;vertical-align:top;word-break:break-word;color:#000}
+        .dok-preview-table td:first-child{width:30px}
+        .dok-preview-table td:nth-child(2){text-align:left}
+
+        /* ===== SCROLL ===== */
+        ::-webkit-scrollbar{width:6px}
+        ::-webkit-scrollbar-track{background:#f1f1f1}
+        ::-webkit-scrollbar-thumb{background:#aaa;border-radius:3px}
+
+        /* ===== RESPONSIVE ===== */
+        @media(max-width:900px){
+            .sidebar{width:240px;min-width:240px}
+            .doc-page{width:100%;padding:15mm}
+        }
+        @media(max-width:650px){
+            .app-body{flex-direction:column}
+            .sidebar{width:100%;height:auto;position:relative;top:0}
+            .doc-page{padding:10mm}
+            .doc-ttd-section{flex-direction:column;gap:15px}
+            .doc-ttd-box{width:100%}
+        }
+
+        /* ===== PRINT ===== */
+        @media print{
+            body{background:#fff}
+            .topbar,.sidebar,.modal-overlay{display:none!important}
+            .main-content{padding:0}
+            .doc-page{box-shadow:none;margin:0;padding:20mm}
+        }
+
+        /* Preview scaling */
+        .preview-scaler {
+            transform-origin: top center;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== TOPBAR ===== -->
+<div class="topbar">
+    <h1>📋 Kertas Kerja Pemeriksaan — Bapenda Lombok Tengah</h1>
+    <div class="topbar-actions">
+        <span class="badge-saved" id="badgeSaved">✓ Tersimpan</span>
+        <button class="btn btn-warning btn-sm" onclick="simpanKKP()">💾 Simpan</button>
+        <button class="btn btn-info btn-sm" onclick="muatKKP()">📂 Muat</button>
+        <button class="btn btn-danger btn-sm" onclick="resetKKP()">🔄 Reset</button>
+    </div>
+</div>
+
+<div class="app-body">
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar">
+    <div class="sidebar-header">
+        <h3>📋 MENU KKP</h3>
+    </div>
+    <div class="sidebar-nav">
+        <div class="nav-section">Data Utama</div>
+        <div class="nav-item active" onclick="showPanel('p-wp')">
+            <span class="nav-icon">🏢</span> Data Wajib Pajak
+        </div>
+        <div class="nav-item" onclick="showPanel('p-tim')">
+            <span class="nav-icon">👥</span> Tim Pemeriksa
+        </div>
+        <div class="nav-item" onclick="showPanel('p-kkp')">
+            <span class="nav-icon">📄</span> Data KKP & Surat
+        </div>
+
+        <div class="nav-section">Dokumen Pemeriksaan</div>
+        <div class="nav-item" onclick="showPanel('p-bak')">
+            <span class="nav-icon">📝</span> Berita Acara Keterangan
+        </div>
+        <div class="nav-item" onclick="showPanel('p-bad')">
+            <span class="nav-icon">📦</span> Berita Acara Dokumen
+        </div>
+    </div>
+
+    <div class="sidebar-footer">
+        <div style="font-size:11px;color:rgba(255,255,255,.5);text-align:center">
+            Bapenda Kab. Lombok Tengah<br>v1.0 — 2026
+        </div>
+    </div>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-content">
+
+    <!-- ========== PANEL: DATA WP ========== -->
+    <div class="panel active" id="p-wp">
+        <div class="card">
+            <div class="card-header"><h3>🏢 Data Wajib Pajak</h3></div>
+            <div class="card-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nama Perusahaan / Usaha</label>
+                        <input type="text" id="wp_namaPerusahaan" placeholder="Contoh: Serenity Cove (PT. Mandala Living Estate)">
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Usaha (Brand/Trade Name)</label>
+                        <input type="text" id="wp_namaUsaha" placeholder="Contoh: Serenity Cove">
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Pemilik</label>
+                        <input type="text" id="wp_namaPemilik" placeholder="Nama pemilik perusahaan">
+                    </div>
+                    <div class="form-group">
+                        <label>NPWPD</label>
+                        <input type="text" id="wp_npwpd" placeholder="__.___.__.___.___">
+                    </div>
+                    <div class="form-group form-full">
+                        <label>Alamat WP</label>
+                        <textarea id="wp_alamat" rows="2" placeholder="Alamat lengkap WP"></textarea>
+                    </div>
+                </div>
+
+                <div style="margin-top:16px">
+                    <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:8px">Jenis Pajak yang Diperiksa</label>
+                    <div class="checkbox-grid" id="checkboxPajak">
+                        <!-- Generated by JS -->
+                    </div>
+                    <div class="form-group" style="margin-top:10px;max-width:400px">
+                        <label>Jenis Pajak Lainnya (isi jika ada)</label>
+                        <input type="text" id="wp_pajakLainnya" placeholder="Contoh: Pajak Sarang Burung Walet">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3>👤 Pihak yang Dimintai Keterangan</h3></div>
+            <div class="card-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nama Lengkap</label>
+                        <input type="text" id="wp_namaKeterangan" placeholder="Nama yang dimintai keterangan">
+                    </div>
+                    <div class="form-group">
+                        <label>Jabatan</label>
+                        <input type="text" id="wp_jabatanKeterangan" placeholder="Contoh: Akuntan, Direktur, Manajer">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== PANEL: TIM PEMERIKSA ========== -->
+    <div class="panel" id="p-tim">
+        <div class="card">
+            <div class="card-header">
+                <h3>👥 Tim Pemeriksa</h3>
+            </div>
+            <div class="card-body">
+                <div class="info-box info-blue">
+                    <strong>ℹ️</strong> Isi data lengkap tim pemeriksa. Kolom <b>"TTD di BA"</b> menentukan siapa yang menandatangani Berita Acara. Pilih salah satu dari daftar saat membuat BA.
+                </div>
+
+                <!-- SUPERVISOR -->
+                <div style="margin-top:16px;margin-bottom:8px;font-weight:700;color:#1e3c72;font-size:13px;border-bottom:2px solid #1e3c72;padding-bottom:5px">👑 Supervisor</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nama Lengkap + Gelar</label>
+                        <input type="text" id="sv_nama" placeholder="Nama Supervisor">
+                    </div>
+                    <div class="form-group">
+                        <label>NIP</label>
+                        <input type="text" id="sv_nip" placeholder="NIP Supervisor">
+                    </div>
+                    <div class="form-group">
+                        <label>Pangkat / Golongan</label>
+                        <input type="text" id="sv_pangkat" placeholder="Contoh: Pembina / IV-a">
+                    </div>
+                    <div class="form-group">
+                        <label>Jabatan Struktural</label>
+                        <input type="text" id="sv_jabatan" placeholder="Contoh: Kepala Seksi Pemeriksaan">
+                    </div>
+                </div>
+
+                <!-- KETUA TIM -->
+                <div style="margin-top:16px;margin-bottom:8px;font-weight:700;color:#1e3c72;font-size:13px;border-bottom:2px solid #1e3c72;padding-bottom:5px">🎯 Ketua Tim</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nama Lengkap + Gelar</label>
+                        <input type="text" id="kt_nama" placeholder="Nama Ketua Tim" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>NIP</label>
+                        <input type="text" id="kt_nip" placeholder="NIP Ketua Tim">
+                    </div>
+                    <div class="form-group">
+                        <label>Pangkat / Golongan</label>
+                        <input type="text" id="kt_pangkat" placeholder="Contoh: Penata Muda / III-a">
+                    </div>
+                    <div class="form-group">
+                        <label>Jabatan Struktural</label>
+                        <input type="text" id="kt_jabatan" placeholder="Contoh: Fungsional Pemeriksa Pajak">
+                    </div>
+                </div>
+
+                <!-- ANGGOTA TIM -->
+                <div style="margin-top:16px;margin-bottom:8px;font-weight:700;color:#1e3c72;font-size:13px;border-bottom:2px solid #1e3c72;padding-bottom:5px">
+                    👤 Anggota Tim
+                    <button class="btn btn-success btn-xs" style="margin-left:12px" onclick="tambahAnggota()">+ Tambah Anggota</button>
+                </div>
+                <div id="anggotaContainer">
+                    <!-- Generated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== PANEL: DATA KKP ========== -->
+    <div class="panel" id="p-kkp">
+        <div class="card">
+            <div class="card-header"><h3>📄 Data KKP & Surat Perintah</h3></div>
+            <div class="card-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nomor KKP</label>
+                        <input type="text" id="kkp_nomor" placeholder="Contoh: KKP-001/BAPENDA/2026">
+                    </div>
+                    <div class="form-group">
+                        <label>Tanggal KKP</label>
+                        <input type="date" id="kkp_tanggal">
+                    </div>
+                    <div class="form-group">
+                        <label>Nomor Surat Perintah Tugas</label>
+                        <input type="text" id="kkp_noSPT" placeholder="Contoh: 970/XXX/BAPENDA/2026">
+                    </div>
+                    <div class="form-group">
+                        <label>Tanggal Surat Perintah Tugas</label>
+                        <input type="date" id="kkp_tglSPT">
+                    </div>
+                    <div class="form-group">
+                        <label>Masa Pajak (Dari)</label>
+                        <input type="month" id="kkp_masaDari" value="2025-01">
+                    </div>
+                    <div class="form-group">
+                        <label>Masa Pajak (Sampai)</label>
+                        <input type="month" id="kkp_masaSampai" value="2025-12">
+                    </div>
+                    <div class="form-group">
+                        <label>Tahun Pajak yang Diperiksa</label>
+                        <input type="number" id="kkp_tahunPajak" value="2025" min="2000" max="2099">
+                    </div>
+                    <div class="form-group">
+                        <label>Tanggal Pemeriksaan Lapangan</label>
+                        <input type="date" id="kkp_tglLapangan">
+                    </div>
+                    <div class="form-group">
+                        <label>Tempat Pemeriksaan</label>
+                        <input type="text" id="kkp_tempat" value="Kantor Bapenda" placeholder="Tempat pemeriksaan">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== PANEL: BA KETERANGAN ========== -->
+    <div class="panel" id="p-bak">
+        <div class="card">
+            <div class="card-header">
+                <h3>📝 Berita Acara Pemberian Keterangan</h3>
+                <button class="btn btn-success btn-sm" onclick="tambahBA()">+ Buat BA Baru</button>
+            </div>
+            <div class="card-body">
+                <div class="info-box info-yellow">
+                    <strong>⚠️</strong> Setiap Berita Acara dapat berisi beberapa butir keterangan. Klik <b>"+ Buat BA Baru"</b> untuk membuat berita acara baru.
+                </div>
+                <div id="baContainer" style="margin-top:15px">
+                    <!-- Generated -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== PANEL: BA DOKUMEN ========== -->
+    <div class="panel" id="p-bad">
+        <div class="card">
+            <div class="card-header">
+                <h3>📦 Berita Acara Peminjaman / Pemberian Dokumen</h3>
+                <button class="btn btn-success btn-sm" onclick="tambahBAD()">+ Buat BAD Baru</button>
+            </div>
+            <div class="card-body">
+                <div class="info-box info-blue">
+                    <strong>ℹ️</strong> Daftar dokumen yang dipinjam/diterima dari WP selama pemeriksaan.
+                </div>
+                <div id="badContainer" style="margin-top:15px">
+                    <!-- Generated -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /main-content -->
+</div><!-- /app-body -->
+
+<!-- ===== MODAL PREVIEW ===== -->
+<div class="modal-overlay" id="modalPreview">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="modalPreviewTitle">📄 Preview Dokumen</h3>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body" id="modalPreviewBody">
+            <!-- Preview content -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal()">✕ Tutup</button>
+            <button class="btn btn-primary" id="btnDownloadPDF" onclick="downloadPDF()">⬇ Download PDF</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL MUAT KKP ===== -->
+<div class="modal-overlay" id="modalMuat">
+    <div class="modal-box" style="max-width:600px">
+        <div class="modal-header">
+            <h3>📂 Muat KKP Tersimpan</h3>
+            <button class="modal-close" onclick="document.getElementById('modalMuat').classList.remove('active')">×</button>
+        </div>
+        <div class="modal-body" id="muatListContainer" style="background:#fff;max-height:70vh;overflow-y:auto">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="document.getElementById('modalMuat').classList.remove('active')">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== HIDDEN PDF CONTAINER ===== -->
+<div id="pdfContainer" style="display:none;position:absolute;left:-9999px;top:-9999px;width:210mm">
+</div>
+
+<img id="logoSrc" src="" style="display:none" alt="logo">
+
+<script>
+// ================================================================
+//  KONFIGURASI
+// ================================================================
+const INSTANSI = {
+    pemda   : 'PEMERINTAH KABUPATEN LOMBOK TENGAH',
+    instansi: 'BADAN PENDAPATAN DAERAH',
+    alamat  : 'Jalan Raden Puguh Puyung – Praya Komplek Kantor Bupati Lombok Tengah Gedung A',
+    kota    : 'Praya'
+};
+
+const LOGO_BASE64 = `data:image/png;base64,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`;
+
+const STORAGE_KEY = 'kkp_bapenda_loteng';
+const NAMA_BULAN  = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const NAMA_HARI   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+
+const JENIS_PAJAK_LIST = [
+    {id:'pbjt_makmin',   label:'PBJT Makanan & Minuman'},
+    {id:'pbjt_hotel',    label:'PBJT Jasa Perhotelan'},
+    {id:'pbjt_hiburan',  label:'PBJT Jasa Hiburan'},
+    {id:'pbjt_parkir',   label:'PBJT Jasa Parkir'},
+    {id:'pbjt_listrik',  label:'PBJT Tenaga Listrik'},
+    {id:'pajak_air',     label:'Pajak Air Tanah'},
+    {id:'pbb_p2',        label:'PBB-P2'},
+    {id:'bphtb',         label:'BPHTB'},
+    {id:'reklame',       label:'Pajak Reklame'},
+    {id:'hiburan40',     label:'PBJT Hiburan Tertentu (40%)'},
+];
+
+let anggotaCount = 0;
+let baCount      = 0;
+let badCount     = 0;
+let currentDocHTML = '';
+let currentDocName = '';
+let currentKKPId   = null;
+
+// ================================================================
+//  INIT
+// ================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    renderCheckboxPajak();
+    tambahAnggota();
+    tambahBA();
+    tambahBAD();
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('kkp_tanggal').value    = today;
+    document.getElementById('kkp_tglSPT').value     = today;
+    document.getElementById('kkp_tglLapangan').value = today;
+});
+
+// ================================================================
+//  PANEL NAVIGATION
+// ================================================================
+function showPanel(id) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => {
+        if (n.getAttribute('onclick') && n.getAttribute('onclick').includes(id)) {
+            n.classList.add('active');
+        }
+    });
+}
+
+// ================================================================
+//  CHECKBOX PAJAK
+// ================================================================
+function renderCheckboxPajak() {
+    const wrap = document.getElementById('checkboxPajak');
+    wrap.innerHTML = JENIS_PAJAK_LIST.map(jp => `
+        <label class="check-item" id="lbl_${jp.id}" onclick="toggleCheck('${jp.id}')">
+            <input type="checkbox" id="chk_${jp.id}" onchange="toggleCheck('${jp.id}')">
+            ${jp.label}
+        </label>
+    `).join('');
+}
+
+function toggleCheck(id) {
+    const chk = document.getElementById('chk_'+id);
+    const lbl = document.getElementById('lbl_'+id);
+    chk.checked = !chk.checked;
+    lbl.classList.toggle('checked', chk.checked);
+}
+
+function getCheckedPajak() {
+    const arr = JENIS_PAJAK_LIST.filter(jp => document.getElementById('chk_'+jp.id)?.checked).map(jp => jp.label);
+    const lain = document.getElementById('wp_pajakLainnya').value.trim();
+    if (lain) arr.push(lain);
+    return arr;
+}
+
+// ================================================================
+//  ANGGOTA TIM
+// ================================================================
+function tambahAnggota() {
+    anggotaCount++;
+    const n = anggotaCount;
+    const div = document.createElement('div');
+    div.className = 'ba-item';
+    div.id = 'anggota_'+n;
+    div.innerHTML = `
+        <div class="ba-item-header">
+            <span style="font-weight:700;font-size:13px;color:#1e3c72">👤 Anggota Tim ${n}</span>
+            <button class="btn btn-danger btn-xs" onclick="hapusAnggota(${n})">✕ Hapus</button>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Nama Lengkap + Gelar</label>
+                <input type="text" id="ag${n}_nama" placeholder="Nama Anggota Tim">
+            </div>
+            <div class="form-group">
+                <label>NIP</label>
+                <input type="text" id="ag${n}_nip" placeholder="NIP Anggota">
+            </div>
+            <div class="form-group">
+                <label>Pangkat / Golongan</label>
+                <input type="text" id="ag${n}_pangkat" placeholder="Pangkat/Golongan">
+            </div>
+            <div class="form-group">
+                <label>Jabatan Struktural</label>
+                <input type="text" id="ag${n}_jabatan" placeholder="Jabatan">
+            </div>
+        </div>
+    `;
+    document.getElementById('anggotaContainer').appendChild(div);
+}
+
+function hapusAnggota(n) {
+    const el = document.getElementById('anggota_'+n);
+    if (el) el.remove();
+}
+
+function getAllTim() {
+    const list = [];
+    if (document.getElementById('sv_nama').value.trim()) {
+        list.push({
+            peran   : 'Supervisor',
+            nama    : document.getElementById('sv_nama').value.trim(),
+            nip     : document.getElementById('sv_nip').value.trim(),
+            pangkat : document.getElementById('sv_pangkat').value.trim(),
+            jabatan : document.getElementById('sv_jabatan').value.trim(),
+        });
+    }
+    if (document.getElementById('kt_nama').value.trim()) {
+        list.push({
+            peran   : 'Ketua Tim',
+            nama    : document.getElementById('kt_nama').value.trim(),
+            nip     : document.getElementById('kt_nip').value.trim(),
+            pangkat : document.getElementById('kt_pangkat').value.trim(),
+            jabatan : document.getElementById('kt_jabatan').value.trim(),
+        });
+    }
+    for (let i = 1; i <= anggotaCount; i++) {
+        const el = document.getElementById('anggota_'+i);
+        if (!el) continue;
+        const nama = document.getElementById('ag'+i+'_nama')?.value.trim();
+        if (nama) {
+            list.push({
+                peran   : 'Anggota Tim',
+                nama    : nama,
+                nip     : document.getElementById('ag'+i+'_nip')?.value.trim(),
+                pangkat : document.getElementById('ag'+i+'_pangkat')?.value.trim(),
+                jabatan : document.getElementById('ag'+i+'_jabatan')?.value.trim(),
+            });
+        }
+    }
+    return list;
+}
+
+function buildTtdOptions(selectedVal='') {
+    const tim = getAllTim();
+    if (tim.length === 0) return '<option value="">-- (Isi data tim dulu) --</option>';
+    return tim.map(t =>
+        `<option value="${t.nama}||${t.nip}||${t.peran}" ${selectedVal === t.nama ? 'selected' : ''}>${t.peran}: ${t.nama}</option>`
+    ).join('');
+}
+
+// ================================================================
+//  BA KETERANGAN
+// ================================================================
+function tambahBA() {
+    baCount++;
+    const n = baCount;
+    const div = document.createElement('div');
+    div.className = 'ba-item';
+    div.id = 'ba_'+n;
+
+    div.innerHTML = `
+        <div class="ba-item-header">
+            <div style="display:flex;align-items:center;gap:10px">
+                <span class="ba-item-num">${n}</span>
+                <span style="font-weight:700;font-size:13px;color:#1e3c72">Berita Acara Keterangan #${n}</span>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="btn btn-info btn-xs" onclick="previewBA(${n})">👁 Preview</button>
+                <button class="btn btn-primary btn-xs" onclick="downloadBA(${n})">⬇ PDF</button>
+                <button class="btn btn-danger btn-xs" onclick="hapusBA(${n})">✕ Hapus</button>
+            </div>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Tanggal BA</label>
+                <input type="date" id="ba${n}_tgl" value="${new Date().toISOString().slice(0,10)}">
+            </div>
+            <div class="form-group">
+                <label>Tempat</label>
+                <input type="text" id="ba${n}_tempat" value="Kantor Bapenda" placeholder="Tempat pembuatan BA">
+            </div>
+            <div class="form-group">
+                <label>Petugas yang Membuat BA (TTD)</label>
+                <select id="ba${n}_ttdPetugas" class="ttd-select">
+                    ${buildTtdOptions()}
+                </select>
+                <span class="form-hint">Pilih dari daftar Tim Pemeriksa</span>
+            </div>
+        </div>
+
+        <div style="margin-top:14px">
+            <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:6px">Isi Keterangan (butir-butir)</label>
+            <div id="ba${n}_isiContainer">
+                ${renderIsiBA(n, 1)}
+            </div>
+            <button class="btn btn-secondary btn-xs" style="margin-top:8px" onclick="tambahIsiBA(${n})">+ Tambah Butir</button>
+        </div>
+    `;
+    document.getElementById('baContainer').appendChild(div);
+}
+
+function renderIsiBA(baNum, isiNum) {
+    return `
+        <div class="ba-isi-item" id="ba${baNum}_isi_${isiNum}">
+            <span class="num" style="padding-top:8px">${isiNum}.</span>
+            <textarea id="ba${baNum}_isi_txt_${isiNum}" placeholder="Tuliskan keterangan butir ${isiNum}..." rows="3"></textarea>
+            <button class="btn btn-danger btn-xs" style="align-self:flex-start;margin-top:6px" onclick="hapusIsiBA(${baNum},${isiNum})">✕</button>
+        </div>
+    `;
+}
+
+let baIsiCount = {};
+function tambahIsiBA(baNum) {
+    if (!baIsiCount[baNum]) baIsiCount[baNum] = 1;
+    baIsiCount[baNum]++;
+    const n = baIsiCount[baNum];
+    const cont = document.getElementById('ba'+baNum+'_isiContainer');
+    cont.insertAdjacentHTML('beforeend', renderIsiBA(baNum, n));
+    renumberIsiBA(baNum);
+}
+
+function hapusIsiBA(baNum, isiNum) {
+    const el = document.getElementById('ba'+baNum+'_isi_'+isiNum);
+    if (el) { el.remove(); renumberIsiBA(baNum); }
+}
+
+function renumberIsiBA(baNum) {
+    const cont = document.getElementById('ba'+baNum+'_isiContainer');
+    if (!cont) return;
+    const items = cont.querySelectorAll('.ba-isi-item');
+    items.forEach((item, idx) => {
+        const numEl = item.querySelector('.num');
+        if (numEl) numEl.textContent = (idx+1)+'.';
+    });
+}
+
+function hapusBA(n) {
+    if (!confirm('Hapus Berita Acara #'+n+'?')) return;
+    const el = document.getElementById('ba_'+n);
+    if (el) el.remove();
+}
+
+function getBAIsiList(baNum) {
+    const cont = document.getElementById('ba'+baNum+'_isiContainer');
+    if (!cont) return [];
+    const result = [];
+    cont.querySelectorAll('.ba-isi-item').forEach((item, idx) => {
+        const ta = item.querySelector('textarea');
+        if (ta && ta.value.trim()) result.push({no: idx+1, teks: ta.value.trim()});
+    });
+    return result;
+}
+
+// ================================================================
+//  BA DOKUMEN
+// ================================================================
+let badDocsCount = {};
+
+function tambahBAD() {
+    badCount++;
+    const n = badCount;
+    const div = document.createElement('div');
+    div.className = 'ba-item';
+    div.id = 'bad_'+n;
+    badDocsCount[n] = 3;
+
+    div.innerHTML = `
+        <div class="ba-item-header">
+            <div style="display:flex;align-items:center;gap:10px">
+                <span class="ba-item-num">${n}</span>
+                <span style="font-weight:700;font-size:13px;color:#1e3c72">BA Dokumen #${n}</span>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="btn btn-info btn-xs" onclick="previewBAD(${n})">👁 Preview</button>
+                <button class="btn btn-primary btn-xs" onclick="downloadBAD(${n})">⬇ PDF</button>
+                <button class="btn btn-danger btn-xs" onclick="hapusBAD(${n})">✕ Hapus</button>
+            </div>
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Tanggal BA Dokumen</label>
+                <input type="date" id="bad${n}_tgl" value="${new Date().toISOString().slice(0,10)}">
+            </div>
+            <div class="form-group">
+                <label>Tempat</label>
+                <input type="text" id="bad${n}_tempat" value="Kantor Bapenda">
+            </div>
+            <div class="form-group">
+                <label>Jenis</label>
+                <select id="bad${n}_jenis">
+                    <option value="peminjaman">Peminjaman Dokumen</option>
+                    <option value="pengembalian">Pengembalian Dokumen</option>
+                    <option value="pemberian">Pemberian Dokumen</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Petugas Penerima (TTD)</label>
+                <select id="bad${n}_ttdPetugas" class="ttd-select">
+                    ${buildTtdOptions()}
+                </select>
+            </div>
+        </div>
+        <!-- Tabel Dokumen -->
+        <div style="margin-top:14px;overflow-x:auto">
+            <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:6px">Daftar Dokumen</label>
+            <table class="dok-table">
+                <thead><tr>
+                    <th style="width:40px">No</th>
+                    <th>Nama / Jenis Dokumen</th>
+                    <th style="width:80px">Jumlah</th>
+                    <th style="width:100px">Satuan</th>
+                    <th style="width:130px">Keterangan</th>
+                    <th style="width:40px">✕</th>
+                </tr></thead>
+                <tbody id="bad${n}_tbody">
+                    ${[1,2,3].map(i => rowDok(n,i)).join('')}
+                </tbody>
+            </table>
+            <button class="btn btn-secondary btn-xs" style="margin-top:8px" onclick="tambahRowDok(${n})">+ Tambah Baris</button>
+        </div>
+    `;
+    document.getElementById('badContainer').appendChild(div);
+}
+
+function rowDok(badNum, rowNum) {
+    return `<tr id="bad${badNum}_row_${rowNum}">
+        <td>${rowNum}</td>
+        <td><input type="text" id="bad${badNum}_nama_${rowNum}" placeholder="Nama dokumen"></td>
+        <td><input type="number" id="bad${badNum}_jml_${rowNum}" value="1" min="1" style="text-align:center"></td>
+        <td><select id="bad${badNum}_sat_${rowNum}"><option>Lembar</option><option>Bendel</option><option>File</option><option>Exp.</option><option>Rangkap</option></select></td>
+        <td><input type="text" id="bad${badNum}_ket_${rowNum}" placeholder="-"></td>
+        <td><button class="btn btn-danger btn-xs" onclick="hapusRowDok(${badNum},${rowNum})">✕</button></td>
+    </tr>`;
+}
+
+let badRowCount = {};
+function tambahRowDok(badNum) {
+    if (!badRowCount[badNum]) badRowCount[badNum] = badDocsCount[badNum] || 3;
+    badRowCount[badNum]++;
+    const n = badRowCount[badNum];
+    document.getElementById('bad'+badNum+'_tbody').insertAdjacentHTML('beforeend', rowDok(badNum, n));
+    renumberDok(badNum);
+}
+
+function hapusRowDok(badNum, rowNum) {
+    const el = document.getElementById('bad'+badNum+'_row_'+rowNum);
+    if (el) { el.remove(); renumberDok(badNum); }
+}
+
+function renumberDok(badNum) {
+    const tbody = document.getElementById('bad'+badNum+'_tbody');
+    if (!tbody) return;
+    tbody.querySelectorAll('tr').forEach((tr, i) => {
+        const firstTd = tr.querySelector('td:first-child');
+        if (firstTd) firstTd.textContent = i+1;
+    });
+}
+
+function hapusBAD(n) {
+    if (!confirm('Hapus BA Dokumen #'+n+'?')) return;
+    const el = document.getElementById('bad_'+n);
+    if (el) el.remove();
+}
+
+function getDokList(badNum) {
+    const tbody = document.getElementById('bad'+badNum+'_tbody');
+    if (!tbody) return [];
+    const result = [];
+    tbody.querySelectorAll('tr').forEach((tr, idx) => {
+        const nama = tr.querySelector('[id^="bad'+badNum+'_nama_"]')?.value.trim();
+        if (nama) {
+            result.push({
+                no  : idx+1,
+                nama: nama,
+                jml : tr.querySelector('[id^="bad'+badNum+'_jml_"]')?.value || '1',
+                sat : tr.querySelector('[id^="bad'+badNum+'_sat_"]')?.value || 'Lembar',
+                ket : tr.querySelector('[id^="bad'+badNum+'_ket_"]')?.value || '-',
+            });
+        }
+    });
+    return result;
+}
+
+// ================================================================
+//  HELPERS
+// ================================================================
+function formatTglPanjang(dateStr) {
+    if (!dateStr) return '_______________';
+    const d = new Date(dateStr + 'T00:00:00');
+    return NAMA_HARI[d.getDay()] + ', ' + d.getDate() + ' ' + NAMA_BULAN[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+function formatTglPendek(dateStr) {
+    if (!dateStr) return '_______________';
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.getDate() + ' ' + NAMA_BULAN[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+function gv(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+}
+
+function parseTTD(val) {
+    if (!val) return {nama:'', nip:'', peran:''};
+    const parts = val.split('||');
+    return {nama: parts[0]||'', nip: parts[1]||'', peran: parts[2]||''};
+}
+
+// ================================================================
+//  BUILD HTML DOC - KEKOP BERITA ACARA
+// ================================================================
+function buildDocHeader() {
+    return `
+    <div class="doc-header">
+        <div class="doc-header-logo">
+            <img src="${LOGO_BASE64}" alt="Logo Lombok Tengah">
+        </div>
+        <div class="doc-header-text">
+            <div class="instansi1">${INSTANSI.pemda}</div>
+            <div class="instansi2">${INSTANSI.instansi}</div>
+            <div class="alamat">${INSTANSI.alamat}</div>
+        </div>
+    </div>
+    <div class="doc-line2"></div>
+    `;
+}
+
+function buildBAHTML(baNum) {
+    const tgl       = gv('ba'+baNum+'_tgl');
+    const tempat    = gv('ba'+baNum+'_tempat') || 'Kantor Bapenda';
+    const ttdVal    = document.getElementById('ba'+baNum+'_ttdPetugas')?.value || '';
+    const ttd       = parseTTD(ttdVal);
+    const isiList   = getBAIsiList(baNum);
+
+    const namaWP    = gv('wp_namaPerusahaan');
+    const namaKet   = gv('wp_namaKeterangan');
+    const jabKet    = gv('wp_jabatanKeterangan');
+
+    const isiHTML   = isiList.map(item =>
+        `<li><span class="num">${item.no}.</span><span>${item.teks}</span></li>`
+    ).join('') || '<li><span class="num">1.</span><span>(Belum ada isi keterangan)</span></li>';
+
+    return `
+    <div class="doc-page">
+        ${buildDocHeader()}
+        <div class="doc-title">BERITA ACARA PEMERIKSAAN</div>
+
+        <p class="doc-intro">
+            Pada hari ini, <b>${formatTglPanjang(tgl)}</b> bertempat di <b>${tempat}</b>, saya:
+        </p>
+
+        <table class="doc-tabel-ident">
+            <tr><td>Nama Lengkap</td><td>:</td><td><b>${ttd.nama || '_______________'}</b></td></tr>
+            <tr><td>Jabatan</td><td>:</td><td>${ttd.peran || '_______________'}</td></tr>
+        </table>
+
+        <p class="doc-intro">
+            Berdasarkan hak dan wewenang yang ada pada saya, telah melakukan wawancara terhadap perwakilan
+            <b>${namaWP || '_______________'}</b>, sebagai berikut:
+        </p>
+
+        <table class="doc-tabel-ident">
+            <tr><td>Nama Lengkap</td><td>:</td><td><b>${namaKet || '_______________'}</b></td></tr>
+            <tr><td>Jabatan</td><td>:</td><td>${jabKet || '_______________'}</td></tr>
+        </table>
+
+        <p class="doc-intro" style="margin-top:10px">Hasil pemeriksaan dinyatakan sebagai berikut:</p>
+        <ul class="doc-isi-list">${isiHTML}</ul>
+
+        <p class="doc-penutup">
+            Demikian berita acara ini dibuat dengan sebenar-benarnya agar dapat dipergunakan
+            sebagaimana mestinya, apabila terdapat perubahan dikemudian hari akan dilakukan
+            pemeriksaan kembali.
+        </p>
+
+        <div class="doc-tempat-tgl">
+            ${INSTANSI.kota}, ${formatTglPendek(tgl)}
+        </div>
+
+        <div class="doc-ttd-section">
+            <div class="doc-ttd-box">
+                <div class="ttd-judul">${namaWP ? namaWP.split('(')[0].trim() : '_______________'}</div>
+                <div class="ttd-judul">${jabKet || 'Perwakilan WP'},</div>
+                <div class="ttd-ruang"></div>
+                <div class="ttd-nama">${namaKet || '_______________'}</div>
+            </div>
+            <div class="doc-ttd-box">
+                <div class="ttd-judul">${ttd.peran || 'Pemeriksa'},</div>
+                <div class="ttd-ruang"></div>
+                <div class="ttd-nama">${ttd.nama || '_______________'}</div>
+                <div class="ttd-nip">${ttd.nip ? 'NIP. '+ttd.nip : ''}</div>
+            </div>
+        </div>
+    </div>
+    `;
+}
+
+function buildBADHTML(badNum) {
+    const tgl       = gv('bad'+badNum+'_tgl');
+    const tempat    = gv('bad'+badNum+'_tempat') || 'Kantor Bapenda';
+    const jenis     = document.getElementById('bad'+badNum+'_jenis')?.value || 'peminjaman';
+    const ttdVal    = document.getElementById('bad'+badNum+'_ttdPetugas')?.value || '';
+    const ttd       = parseTTD(ttdVal);
+    const dokList   = getDokList(badNum);
+
+    const namaWP    = gv('wp_namaPerusahaan');
+    const namaKet   = gv('wp_namaKeterangan');
+    const jabKet    = gv('wp_jabatanKeterangan');
+
+    const jenisLabel = jenis === 'peminjaman' ? 'PEMINJAMAN' : jenis === 'pengembalian' ? 'PENGEMBALIAN' : 'PEMBERIAN';
+    const jenisKata  = jenis === 'peminjaman' ? 'meminjam' : jenis === 'pengembalian' ? 'mengembalikan' : 'menyerahkan';
+
+    const tabelDok = dokList.length > 0
+        ? `<table class="dok-preview-table">
+            <thead><tr>
+                <th style="width:35px">No</th>
+                <th>Nama / Jenis Dokumen</th>
+                <th style="width:60px">Jumlah</th>
+                <th style="width:70px">Satuan</th>
+                <th style="width:120px">Keterangan</th>
+            </tr></thead>
+            <tbody>${dokList.map(d => `<tr>
+                <td>${d.no}</td>
+                <td style="text-align:left">${d.nama}</td>
+                <td>${d.jml}</td>
+                <td>${d.sat}</td>
+                <td style="text-align:left">${d.ket}</td>
+            </tr>`).join('')}</tbody>
+           </table>`
+        : '<p style="text-align:center;color:#999;padding:10px">(Belum ada dokumen)</p>';
+
+    return `
+    <div class="doc-page">
+        ${buildDocHeader()}
+        <div class="doc-title">BERITA ACARA ${jenisLabel} DOKUMEN</div>
+
+        <p class="doc-intro">
+            Pada hari ini, <b>${formatTglPanjang(tgl)}</b> bertempat di <b>${tempat}</b>,
+            yang bertanda tangan di bawah ini:
+        </p>
+
+        <table class="doc-tabel-ident">
+            <tr><td>Nama Lengkap</td><td>:</td><td><b>${ttd.nama || '_______________'}</b></td></tr>
+            <tr><td>Jabatan</td><td>:</td><td>${ttd.peran || '_______________'} — ${INSTANSI.instansi}</td></tr>
+        </table>
+
+        <p class="doc-intro" style="margin-top:10px">
+            Selanjutnya disebut sebagai <b>PIHAK PENERIMA</b>, telah ${jenisKata} dokumen dari:
+        </p>
+
+        <table class="doc-tabel-ident">
+            <tr><td>Nama Lengkap</td><td>:</td><td><b>${namaKet || '_______________'}</b></td></tr>
+            <tr><td>Jabatan</td><td>:</td><td>${jabKet || '_______________'}</td></tr>
+            <tr><td>Perusahaan</td><td>:</td><td>${namaWP || '_______________'}</td></tr>
+        </table>
+
+        <p class="doc-intro" style="margin-top:10px">
+            Selanjutnya disebut sebagai <b>PIHAK PEMBERI</b>, dengan daftar dokumen sebagai berikut:
+        </p>
+
+        ${tabelDok}
+
+        <p class="doc-penutup">
+            Demikian berita acara ini dibuat dengan sebenar-benarnya untuk dapat dipergunakan
+            sebagaimana mestinya.
+        </p>
+
+        <div class="doc-tempat-tgl">
+            ${INSTANSI.kota}, ${formatTglPendek(tgl)}
+        </div>
+
+        <div class="doc-ttd-section">
+            <div class="doc-ttd-box">
+                <div class="ttd-judul">Pihak Pemberi,</div>
+                <div class="ttd-judul">${namaWP ? namaWP.split('(')[0].trim() : ''}</div>
+                <div class="ttd-ruang"></div>
+                <div class="ttd-nama">${namaKet || '_______________'}</div>
+                <div class="ttd-jabatan">${jabKet || ''}</div>
+            </div>
+            <div class="doc-ttd-box">
+                <div class="ttd-judul">Pihak Penerima,</div>
+                <div class="ttd-judul">${ttd.peran || 'Pemeriksa'},</div>
+                <div class="ttd-ruang"></div>
+                <div class="ttd-nama">${ttd.nama || '_______________'}</div>
+                <div class="ttd-nip">${ttd.nip ? 'NIP. '+ttd.nip : ''}</div>
+            </div>
+        </div>
+    </div>
+    `;
+}
+
+// ================================================================
+//  PREVIEW & DOWNLOAD
+// ================================================================
+let currentPDFOpts = {};
+
+function previewBA(n) {
+    const html = buildBAHTML(n);
+    const namaWP = gv('wp_namaPerusahaan') || 'WP';
+    const tgl    = gv('ba'+n+'_tgl') || 'tgl';
+    currentDocHTML = html;
+    currentDocName = `BA_Keterangan_${namaWP.replace(/\s+/g,'_')}_${n}_${tgl}`;
+    document.getElementById('modalPreviewTitle').textContent = '📝 Preview BA Keterangan #'+n;
+    document.getElementById('modalPreviewBody').innerHTML = html;
+    document.getElementById('modalPreview').classList.add('active');
+}
+
+function previewBAD(n) {
+    const html = buildBADHTML(n);
+    const namaWP = gv('wp_namaPerusahaan') || 'WP';
+    const tgl    = gv('bad'+n+'_tgl') || 'tgl';
+    currentDocHTML = html;
+    currentDocName = `BA_Dokumen_${namaWP.replace(/\s+/g,'_')}_${n}_${tgl}`;
+    document.getElementById('modalPreviewTitle').textContent = '📦 Preview BA Dokumen #'+n;
+    document.getElementById('modalPreviewBody').innerHTML = html;
+    document.getElementById('modalPreview').classList.add('active');
+}
+
+function downloadBA(n) {
+    const html = buildBAHTML(n);
+    const namaWP = gv('wp_namaPerusahaan') || 'WP';
+    const tgl = gv('ba'+n+'_tgl') || new Date().toISOString().slice(0,10);
+    currentDocHTML = html;
+    currentDocName = `BA_Keterangan_${namaWP.replace(/\s+/g,'_')}_${n}_${tgl}`;
+    doDownloadPDF();
+}
+
+function downloadBAD(n) {
+    const html = buildBADHTML(n);
+    const namaWP = gv('wp_namaPerusahaan') || 'WP';
+    const tgl = gv('bad'+n+'_tgl') || new Date().toISOString().slice(0,10);
+    currentDocHTML = html;
+    currentDocName = `BA_Dokumen_${namaWP.replace(/\s+/g,'_')}_${n}_${tgl}`;
+    doDownloadPDF();
+}
+
+function downloadPDF() {
+    closeModal();
+    doDownloadPDF();
+}
+
+function doDownloadPDF() {
+    if (!currentDocHTML) { alert('Tidak ada konten untuk di-download.'); return; }
+
+    const element = document.createElement('div');
+    element.innerHTML = currentDocHTML;
+    element.style.width = '210mm';
+    
+    const opt = {
+        margin       : [0, 0, 0, 0],
+        filename     : (currentDocName || 'Dokumen_KKP') + '.pdf',
+        image        : { type: 'jpeg', quality: 0.98 },
+        html2canvas  : { scale: 2, useCORS: true, logging: false, letterRendering: true },
+        jsPDF        : { unit: 'mm', format: 'a4', orientation: 'portrait', hotfixes: ['px_scaling'] },
+        pagebreak    : { mode: 'avoid-all' }
+    };
+
+    html2pdf().set(opt).from(element).save()
+        .then(() => { alert('✅ PDF berhasil didownload: ' + opt.filename); })
+        .catch(err => { console.error(err); alert('❌ Gagal membuat PDF. Coba lagi.'); });
+}
+
+function closeModal() {
+    document.getElementById('modalPreview').classList.remove('active');
+}
+
+// ================================================================
+//  LOCALSTORAGE
+// ================================================================
+function collectData() {
+    const data = {
+        id: currentKKPId || Date.now().toString(),
+        tanggalSimpan: new Date().toISOString(),
+        wp: {
+            namaPerusahaan  : gv('wp_namaPerusahaan'),
+            namaUsaha       : gv('wp_namaUsaha'),
+            namaPemilik     : gv('wp_namaPemilik'),
+            npwpd           : gv('wp_npwpd'),
+            alamat          : gv('wp_alamat'),
+            namaKeterangan  : gv('wp_namaKeterangan'),
+            jabatanKeterangan: gv('wp_jabatanKeterangan'),
+            pajakChecked    : JENIS_PAJAK_LIST.filter(jp => document.getElementById('chk_'+jp.id)?.checked).map(jp=>jp.id),
+            pajakLainnya    : gv('wp_pajakLainnya'),
+        },
+        tim: {
+            sv: { nama:gv('sv_nama'), nip:gv('sv_nip'), pangkat:gv('sv_pangkat'), jabatan:gv('sv_jabatan') },
+            kt: { nama:gv('kt_nama'), nip:gv('kt_nip'), pangkat:gv('kt_pangkat'), jabatan:gv('kt_jabatan') },
+            anggota: []
+        },
+        kkp: {
+            nomor      : gv('kkp_nomor'),
+            tanggal    : gv('kkp_tanggal'),
+            noSPT      : gv('kkp_noSPT'),
+            tglSPT     : gv('kkp_tglSPT'),
+            masaDari   : gv('kkp_masaDari'),
+            masaSampai : gv('kkp_masaSampai'),
+            tahunPajak : gv('kkp_tahunPajak'),
+            tglLapangan: gv('kkp_tglLapangan'),
+            tempat     : gv('kkp_tempat'),
+        },
+        ba: [], bad: []
+    };
+
+    for (let i = 1; i <= anggotaCount; i++) {
+        const el = document.getElementById('anggota_'+i);
+        if (!el) continue;
+        data.tim.anggota.push({
+            id     : i,
+            nama   : gv('ag'+i+'_nama'),
+            nip    : gv('ag'+i+'_nip'),
+            pangkat: gv('ag'+i+'_pangkat'),
+            jabatan: gv('ag'+i+'_jabatan'),
+        });
+    }
+
+    for (let i = 1; i <= baCount; i++) {
+        const el = document.getElementById('ba_'+i);
+        if (!el) continue;
+        data.ba.push({
+            id     : i,
+            tgl    : gv('ba'+i+'_tgl'),
+            tempat : gv('ba'+i+'_tempat'),
+            ttd    : document.getElementById('ba'+i+'_ttdPetugas')?.value || '',
+            isiList: getBAIsiList(i),
+        });
+    }
+
+    for (let i = 1; i <= badCount; i++) {
+        const el = document.getElementById('bad_'+i);
+        if (!el) continue;
+        data.bad.push({
+            id    : i,
+            tgl   : gv('bad'+i+'_tgl'),
+            tempat: gv('bad'+i+'_tempat'),
+            jenis : document.getElementById('bad'+i+'_jenis')?.value || 'peminjaman',
+            ttd   : document.getElementById('bad'+i+'_ttdPetugas')?.value || '',
+            doks  : getDokList(i),
+        });
+    }
+    return data;
+}
+
+function simpanKKP() {
+    const data = collectData();
+    const storage = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+    const idx = storage.findIndex(k => k.id === data.id);
+    if (idx >= 0) storage[idx] = data; else storage.push(data);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
+    currentKKPId = data.id;
+    document.getElementById('badgeSaved').style.display = 'inline';
+    alert('✅ KKP berhasil disimpan!\n' + data.wp.namaPerusahaan);
+}
+
+function muatKKP() {
+    const storage = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+    const cont = document.getElementById('muatListContainer');
+    if (storage.length === 0) {
+        cont.innerHTML = '<div style="text-align:center;padding:30px;color:#666">📭 Belum ada KKP tersimpan</div>';
+    } else {
+        storage.sort((a,b) => new Date(b.tanggalSimpan) - new Date(a.tanggalSimpan));
+        cont.innerHTML = storage.map(k => `
+            <div style="background:#f8f9fa;border:1px solid #ddd;border-radius:8px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+                <div>
+                    <div style="font-weight:700;color:#1e3c72;font-size:14px">${k.kkp?.nomor || 'KKP'}</div>
+                    <div style="font-size:12px;color:#555;margin-top:3px">${k.wp?.namaPerusahaan || '-'}</div>
+                    <div style="font-size:11px;color:#888;margin-top:2px">Disimpan: ${new Date(k.tanggalSimpan).toLocaleString('id-ID')}</div>
+                </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <button class="btn btn-success btn-sm" onclick="loadKKP('${k.id}')">📂 Muat</button>
+                    <button class="btn btn-danger btn-sm" onclick="hapusKKP('${k.id}')">🗑</button>
+                </div>
+            </div>
+        `).join('');
+    }
+    document.getElementById('modalMuat').classList.add('active');
+}
+
+function loadKKP(id) {
+    const storage = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+    const data = storage.find(k => k.id === id);
+    if (!data) { alert('Data tidak ditemukan'); return; }
+
+    const wp = data.wp || {};
+    ['namaPerusahaan','namaUsaha','namaPemilik','npwpd','alamat','namaKeterangan','jabatanKeterangan','pajakLainnya']
+        .forEach(f => { const el = document.getElementById('wp_'+f); if (el) el.value = wp[f]||''; });
+    
+    JENIS_PAJAK_LIST.forEach(jp => {
+        const chk = document.getElementById('chk_'+jp.id);
+        const lbl = document.getElementById('lbl_'+jp.id);
+        const checked = (wp.pajakChecked||[]).includes(jp.id);
+        if (chk) chk.checked = checked;
+        if (lbl) lbl.classList.toggle('checked', checked);
+    });
+
+    const tim = data.tim || {};
+    ['nama','nip','pangkat','jabatan'].forEach(f => {
+        const sv = document.getElementById('sv_'+f); if (sv) sv.value = tim.sv?.[f]||'';
+        const kt = document.getElementById('kt_'+f); if (kt) kt.value = tim.kt?.[f]||'';
+    });
+    
+    document.getElementById('anggotaContainer').innerHTML = '';
+    anggotaCount = 0;
+    (tim.anggota||[]).forEach(ag => {
+        tambahAnggota();
+        ['nama','nip','pangkat','jabatan'].forEach(f => {
+            const el = document.getElementById('ag'+anggotaCount+'_'+f);
+            if (el) el.value = ag[f]||'';
+        });
+    });
+
+    const kkp = data.kkp || {};
+    ['nomor','tanggal','noSPT','tglSPT','masaDari','masaSampai','tahunPajak','tglLapangan','tempat']
+        .forEach(f => { const el = document.getElementById('kkp_'+f); if (el) el.value = kkp[f]||''; });
+
+    document.getElementById('baContainer').innerHTML = '';
+    baCount = 0; baIsiCount = {};
+    (data.ba||[]).forEach(ba => {
+        tambahBA();
+        const n = baCount;
+        const tglEl = document.getElementById('ba'+n+'_tgl'); if (tglEl) tglEl.value = ba.tgl||'';
+        const tmpEl = document.getElementById('ba'+n+'_tempat'); if (tmpEl) tmpEl.value = ba.tempat||'';
+        const cont = document.getElementById('ba'+n+'_isiContainer');
+        if (cont && ba.isiList?.length) {
+            cont.innerHTML = '';
+            ba.isiList.forEach((item, idx) => {
+                const num = idx+1;
+                cont.insertAdjacentHTML('beforeend', renderIsiBA(n, num));
+                const ta = document.getElementById('ba'+n+'_isi_txt_'+num);
+                if (ta) ta.value = item.teks||'';
+            });
+            baIsiCount[n] = ba.isiList.length;
+        }
+        setTimeout(() => {
+            const sel = document.getElementById('ba'+n+'_ttdPetugas');
+            if (sel) sel.value = ba.ttd||'';
+        }, 100);
+    });
+
+    document.getElementById('badContainer').innerHTML = '';
+    badCount = 0; badRowCount = {};
+    (data.bad||[]).forEach(bad => {
+        tambahBAD();
+        const n = badCount;
+        const tglEl = document.getElementById('bad'+n+'_tgl'); if (tglEl) tglEl.value = bad.tgl||'';
+        const tmpEl = document.getElementById('bad'+n+'_tempat'); if (tmpEl) tmpEl.value = bad.tempat||'';
+        const jenEl = document.getElementById('bad'+n+'_jenis'); if (jenEl) jenEl.value = bad.jenis||'peminjaman';
+        const tbody = document.getElementById('bad'+n+'_tbody');
+        if (tbody && bad.doks?.length) {
+            tbody.innerHTML = '';
+            bad.doks.forEach((dok, idx) => {
+                const rowNum = idx+1;
+                tbody.insertAdjacentHTML('beforeend', rowDok(n, rowNum));
+                const nm = document.getElementById('bad'+n+'_nama_'+rowNum); if (nm) nm.value = dok.nama||'';
+                const jm = document.getElementById('bad'+n+'_jml_'+rowNum); if (jm) jm.value = dok.jml||'1';
+                const st = document.getElementById('bad'+n+'_sat_'+rowNum); if (st) st.value = dok.sat||'Lembar';
+                const kt = document.getElementById('bad'+n+'_ket_'+rowNum); if (kt) kt.value = dok.ket||'';
+            });
+            badRowCount[n] = bad.doks.length;
+        }
+        setTimeout(() => {
+            const sel = document.getElementById('bad'+n+'_ttdPetugas');
+            if (sel) sel.value = bad.ttd||'';
+        }, 100);
+    });
+
+    currentKKPId = id;
+    document.getElementById('badgeSaved').style.display = 'inline';
+    document.getElementById('modalMuat').classList.remove('active');
+    alert('✅ KKP berhasil dimuat!');
+}
+
+function hapusKKP(id) {
+    if (!confirm('Hapus KKP ini?')) return;
+    const storage = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').filter(k => k.id !== id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
+    muatKKP();
+}
+
+function resetKKP() {
+    if (!confirm('Reset semua data KKP? Data tidak akan dihapus dari storage.')) return;
+    currentKKPId = null;
+    location.reload();
+}
+</script>
+</body>
+</html>
